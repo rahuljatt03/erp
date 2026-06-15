@@ -1,15 +1,27 @@
 import { NavLink } from 'react-router-dom';
 import { NAV_SECTIONS } from '../navigation';
+import { company } from '../../shared/session';
 
-export default function Sidebar() {
+export default function Sidebar({ onToggle, collapsed }) {
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
-        <div className="sidebar__logo">M</div>
+        <div className="sidebar__logo">{company.initials}</div>
         <div className="sidebar__brand-text">
-          <strong>Manufacturing ERP</strong>
-          <span>Operations Suite</span>
+          <strong title={company.name}>{company.name}</strong>
+          <span>{company.tagline}</span>
         </div>
+        <button
+          type="button"
+          className="sidebar__toggle"
+          onClick={onToggle}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
 
       {NAV_SECTIONS.map((section) => (

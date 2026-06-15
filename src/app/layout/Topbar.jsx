@@ -1,15 +1,27 @@
 import { useLocation } from 'react-router-dom';
 import { findActiveNav } from '../navigation';
-import { currentUser } from '../../shared/session';
+import { currentUser, company } from '../../shared/session';
 
-export default function Topbar() {
+export default function Topbar({ onToggleSidebar, sidebarCollapsed }) {
   const { pathname } = useLocation();
   const active = findActiveNav(pathname);
 
   return (
     <header className="topbar">
       <div className="topbar__crumbs">
-        Manufacturing ERP
+        {/* Visible only on mobile (CSS); opens/closes the off-canvas drawer. */}
+        <button
+          type="button"
+          className="topbar__toggle"
+          onClick={onToggleSidebar}
+          aria-label={sidebarCollapsed ? 'Open sidebar' : 'Close sidebar'}
+          aria-expanded={!sidebarCollapsed}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+        {company.name}
         {active ? (
           <>
             {' '}

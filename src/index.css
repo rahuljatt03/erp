@@ -36,13 +36,14 @@
   --text-strong: var(--slate-900);
   --text-inverse: #ffffff;
 
-  /* Sidebar (dark) */
-  --sidebar-bg: var(--slate-900);
-  --sidebar-text: #cbd5e1;
-  --sidebar-muted: #64748b;
-  --sidebar-active-bg: rgba(99, 102, 241, 0.16);
-  --sidebar-active-text: #ffffff;
-  --sidebar-active-bar: var(--brand-500);
+  /* Sidebar (light) */
+  --sidebar-bg: #ffffff;
+  --sidebar-text: var(--slate-700);
+  --sidebar-muted: var(--slate-500);
+  --sidebar-border: var(--slate-200);
+  --sidebar-active-bg: var(--slate-100);
+  --sidebar-active-text: var(--slate-900);
+  --sidebar-active-bar: var(--slate-800);
 
   /* Status tones */
   --success: #16a34a;
@@ -64,6 +65,7 @@
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
 
   --sidebar-w: 256px;
+  --sidebar-w-mini: 64px;
   --topbar-h: 60px;
 
   --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -119,25 +121,73 @@ a:hover {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   min-height: 100vh;
+  transition: grid-template-columns 0.2s ease;
+}
+/* Collapsed (desktop): the sidebar shrinks to a narrow icon-only rail. */
+.app-shell.is-collapsed {
+  grid-template-columns: var(--sidebar-w-mini) 1fr;
 }
 
 .sidebar {
   background: var(--sidebar-bg);
   color: var(--sidebar-text);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+/* ---- Collapsed rail: show icons only, hide all text ---- */
+.app-shell.is-collapsed .sidebar__brand-text,
+.app-shell.is-collapsed .sidebar__section-label,
+.app-shell.is-collapsed .nav-item__soon,
+.app-shell.is-collapsed .sidebar__footer {
+  display: none;
+}
+/* In the rail, hide the logo and keep just the centered toggle button. */
+.app-shell.is-collapsed .sidebar__logo {
+  display: none;
+}
+.app-shell.is-collapsed .sidebar__brand {
+  justify-content: center;
+  padding: 18px 0;
+}
+.app-shell.is-collapsed .sidebar__toggle {
+  margin-left: 0;
+}
+.app-shell.is-collapsed .sidebar__section {
+  padding: 16px 8px 4px;
+}
+.app-shell.is-collapsed .nav-item {
+  justify-content: center;
+  padding: 9px 0;
+}
+/* Hide the text label but keep the icon. */
+.app-shell.is-collapsed .nav-item {
+  font-size: 0;
+}
+.app-shell.is-collapsed .nav-item__icon {
+  font-size: 16px;
+}
+/* Drop the active accent bar (no room for it on the rail). */
+.app-shell.is-collapsed .nav-item.is-active::before {
+  display: none;
+}
+
+/* Scrim is only used as a tap-to-close backdrop on the mobile overlay. */
+.app-shell__scrim {
+  display: none;
 }
 
 .sidebar__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 18px 20px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  gap: 10px;
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--sidebar-border);
 }
 .sidebar__logo {
   width: 36px;
@@ -151,15 +201,49 @@ a:hover {
   font-size: 17px;
   flex-shrink: 0;
 }
+.sidebar__brand-text {
+  flex: 1;
+  min-width: 0;
+}
 .sidebar__brand-text strong {
-  color: #fff;
+  color: var(--text-strong);
   display: block;
   font-size: 15px;
+  line-height: 1.25;
   letter-spacing: 0.2px;
+  /* Show the full company name — wrap rather than truncate. */
+  overflow-wrap: anywhere;
 }
 .sidebar__brand-text span {
+  display: block;
   color: var(--sidebar-muted);
   font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* Collapse button living in the sidebar header. */
+.sidebar__toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 0 7px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sidebar__toggle:hover {
+  background: var(--slate-100);
+}
+.sidebar__toggle span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sidebar-text);
 }
 
 .sidebar__section {
@@ -192,8 +276,8 @@ a:hover {
   text-align: left;
 }
 .nav-item:hover {
-  background: rgba(148, 163, 184, 0.1);
-  color: #fff;
+  background: var(--slate-100);
+  color: var(--text-strong);
   text-decoration: none;
 }
 .nav-item.is-active {
@@ -232,7 +316,7 @@ a:hover {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   color: var(--sidebar-muted);
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--sidebar-border);
   border-radius: 4px;
   padding: 1px 5px;
 }
@@ -240,7 +324,7 @@ a:hover {
 .sidebar__footer {
   margin-top: auto;
   padding: 14px 20px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  border-top: 1px solid var(--sidebar-border);
   font-size: 12px;
   color: var(--sidebar-muted);
 }
@@ -266,12 +350,46 @@ a:hover {
   z-index: 10;
 }
 .topbar__crumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 13px;
   color: var(--text-muted);
 }
 .topbar__crumbs strong {
   color: var(--text-strong);
   font-weight: 600;
+}
+
+/* Topbar hamburger — only needed on mobile (desktop uses the in-sidebar rail toggle). */
+.topbar__toggle {
+  /* Hidden on desktop (the in-sidebar rail toggle is used there); shown on mobile. */
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+@media (max-width: 900px) {
+  .topbar__toggle {
+    display: inline-flex;
+  }
+}
+.topbar__toggle:hover {
+  background: var(--slate-100);
+}
+.topbar__toggle span {
+  display: block;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text);
 }
 .topbar__user {
   display: flex;
@@ -855,8 +973,45 @@ a:hover {
   :root {
     --sidebar-w: 0px;
   }
+  /* On mobile, "collapsed" means the full drawer slides off-canvas — not the
+     desktop icon rail. So the column closes to 0 and text labels stay visible. */
+  .app-shell.is-collapsed {
+    grid-template-columns: 0 1fr;
+  }
+  .app-shell.is-collapsed .sidebar__brand-text,
+  .app-shell.is-collapsed .sidebar__section-label,
+  .app-shell.is-collapsed .nav-item__soon,
+  .app-shell.is-collapsed .sidebar__footer,
+  .app-shell.is-collapsed .sidebar__logo {
+    display: revert;
+  }
+  .app-shell.is-collapsed .nav-item {
+    font-size: 14px;
+    justify-content: flex-start;
+    padding: 9px 12px;
+  }
+  /* On mobile the sidebar is an off-canvas drawer overlaying the page. */
   .sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 256px;
+    z-index: 30;
+    transform: translateX(0);
+    transition: transform 0.2s ease;
+    box-shadow: var(--shadow-lg, 0 10px 30px rgba(15, 23, 42, 0.2));
+  }
+  .app-shell.is-collapsed .sidebar {
+    transform: translateX(-100%);
+    visibility: visible;
+  }
+  /* Show the dimming scrim only while the drawer is open. */
+  .app-shell:not(.is-collapsed) .app-shell__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(15, 23, 42, 0.4);
   }
   .form-grid,
   .form-grid--3 {
