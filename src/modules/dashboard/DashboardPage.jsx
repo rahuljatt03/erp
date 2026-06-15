@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '../../shared/components/PageHeader';
-import Button from '../../shared/components/Button';
-import Card from '../../shared/components/Card';
-import Badge from '../../shared/components/Badge';
-import { LoadingState, EmptyState } from '../../shared/components/states';
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import PageHeader from "../../shared/components/PageHeader";
+import Button from "../../shared/components/Button";
+import Card from "../../shared/components/Card";
+import Badge from "../../shared/components/Badge";
+import { LoadingState, EmptyState } from "../../shared/components/states";
 import {
   AddIcon,
   InquiryIcon,
@@ -14,16 +14,16 @@ import {
   ProcurementIcon,
   WarningIcon,
   SuccessIcon,
-} from '../../shared/components/icons';
-import { formatDate, formatNumber, todayIso } from '../../shared/utils/format';
-import { useInquiries } from '../inquiry/useInquiries';
-import { useQuotations } from '../quotation/useQuotations';
-import { useSalesOrders } from '../sales/useSales';
-import { useProductionOrders } from '../production/useProduction';
-import { usePurchaseOrders } from '../procurement/useProcurement';
-import { useFinishedGoods, useRawMaterials } from '../inventory/useInventory';
-import { getStatusMeta } from '../inquiry/inquiry.constants';
-import { summariseProducts } from '../inquiry/inquiry.helpers';
+} from "../../shared/components/icons";
+import { formatDate, formatNumber, todayIso } from "../../shared/utils/format";
+import { useInquiries } from "../inquiry/useInquiries";
+import { useQuotations } from "../quotation/useQuotations";
+import { useSalesOrders } from "../sales/useSales";
+import { useProductionOrders } from "../production/useProduction";
+import { usePurchaseOrders } from "../procurement/useProcurement";
+import { useFinishedGoods, useRawMaterials } from "../inventory/useInventory";
+import { getStatusMeta } from "../inquiry/inquiry.constants";
+import { summariseProducts } from "../inquiry/inquiry.helpers";
 import {
   inquiryMetrics,
   quotationMetrics,
@@ -31,11 +31,12 @@ import {
   productionMetrics,
   procurementMetrics,
   inventoryMetrics,
-} from './dashboard.metrics';
+} from "./dashboard.metrics";
 
 /** A single headline number with a module glyph. */
-function Kpi({ label, value, meta, icon: Icon, tone = 'neutral' }) {
-  const iconClass = tone === 'neutral' ? 'dash-icon' : `dash-icon dash-icon--${tone}`;
+function Kpi({ label, value, meta, icon: Icon, tone = "neutral" }) {
+  const iconClass =
+    tone === "neutral" ? "dash-icon" : `dash-icon dash-icon--${tone}`;
   return (
     <div className="stat">
       <div className="row-between">
@@ -51,16 +52,19 @@ function Kpi({ label, value, meta, icon: Icon, tone = 'neutral' }) {
 }
 
 /** A row inside a flush card — clickable (navigates) when `to` is set. */
-function DashRow({ to, tone = 'neutral', icon: Icon, label, sub, value }) {
+function DashRow({ to, tone = "neutral", icon: Icon, label, sub, value }) {
   const navigate = useNavigate();
-  const iconClass = tone === 'neutral' ? 'dash-icon' : `dash-icon dash-icon--${tone}`;
+  const iconClass =
+    tone === "neutral" ? "dash-icon" : `dash-icon dash-icon--${tone}`;
   return (
     <div
-      className={`dash-row${to ? ' is-clickable' : ''}`}
+      className={`dash-row${to ? " is-clickable" : ""}`}
       onClick={to ? () => navigate(to) : undefined}
-      role={to ? 'button' : undefined}
+      role={to ? "button" : undefined}
       tabIndex={to ? 0 : undefined}
-      onKeyDown={to ? (event) => event.key === 'Enter' && navigate(to) : undefined}
+      onKeyDown={
+        to ? (event) => event.key === "Enter" && navigate(to) : undefined
+      }
     >
       <div className="dash-row__main">
         {Icon ? (
@@ -89,7 +93,13 @@ export default function DashboardPage() {
   const { items: rawMaterials, loading: rawLoading } = useRawMaterials();
 
   const loading =
-    inqLoading || quoteLoading || soLoading || woLoading || poLoading || fgLoading || rawLoading;
+    inqLoading ||
+    quoteLoading ||
+    soLoading ||
+    woLoading ||
+    poLoading ||
+    fgLoading ||
+    rawLoading;
 
   const m = useMemo(() => {
     const today = todayIso();
@@ -101,7 +111,15 @@ export default function DashboardPage() {
       proc: procurementMetrics(purchaseOrders),
       inv: inventoryMetrics(finishedGoods, rawMaterials),
     };
-  }, [inquiries, quotes, salesOrders, workOrders, purchaseOrders, finishedGoods, rawMaterials]);
+  }, [
+    inquiries,
+    quotes,
+    salesOrders,
+    workOrders,
+    purchaseOrders,
+    finishedGoods,
+    rawMaterials,
+  ]);
 
   const recent = inquiries.slice(0, 5);
 
@@ -126,7 +144,7 @@ export default function DashboardPage() {
               tone="info"
             />
             <Kpi
-              label="Active quotations"
+              label="quotations"
               value={m.quote.active}
               meta={`${formatNumber(m.quote.activeValue)} quoted value`}
               icon={QuotationIcon}
@@ -149,9 +167,13 @@ export default function DashboardPage() {
             <Kpi
               label="Stock alerts"
               value={m.inv.outOfStockCount}
-              meta={m.inv.outOfStockCount === 0 ? 'all items in stock' : 'items at zero on-hand'}
+              meta={
+                m.inv.outOfStockCount === 0
+                  ? "all items in stock"
+                  : "items at zero on-hand"
+              }
               icon={m.inv.outOfStockCount === 0 ? SuccessIcon : WarningIcon}
-              tone={m.inv.outOfStockCount === 0 ? 'success' : 'danger'}
+              tone={m.inv.outOfStockCount === 0 ? "success" : "danger"}
             />
           </div>
 
@@ -236,7 +258,9 @@ export default function DashboardPage() {
                           onClick={() => navigate(`/inquiries/${inquiry.id}`)}
                         >
                           <td className="cell-mono">{inquiry.inquiryNo}</td>
-                          <td className="cell-strong">{inquiry.customerName}</td>
+                          <td className="cell-strong">
+                            {inquiry.customerName}
+                          </td>
                           <td>{summariseProducts(inquiry)}</td>
                           <td>{formatDate(inquiry.inquiryDate)}</td>
                           <td>
