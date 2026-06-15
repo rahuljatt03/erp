@@ -1,5 +1,6 @@
 import Field from '../../../shared/components/Field';
 import { UNITS, blankRawMaterial } from '../inquiry.constants';
+import { AddIcon, RemoveIcon, RawMaterialIcon } from '../../../shared/components/icons';
 
 /**
  * Editor for a single product line and its raw materials. Fully controlled —
@@ -38,7 +39,7 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
         </div>
         {canRemove && (
           <button type="button" className="btn btn-ghost btn-sm" onClick={onRemove}>
-            ✕ Remove line
+            <RemoveIcon /> Remove line
           </button>
         )}
       </div>
@@ -110,7 +111,7 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
         </div>
 
         <div className="materials">
-          <div className="materials__label">🧱 Raw materials needed</div>
+          <div className="materials__label"><RawMaterialIcon size={14} /> Raw materials needed</div>
 
           {item.rawMaterials.map((material) => (
             <div className="material-row" key={material.id}>
@@ -147,13 +148,13 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
                 onClick={() => removeMaterial(material.id)}
                 disabled={item.rawMaterials.length === 1}
               >
-                ✕
+                <RemoveIcon />
               </button>
             </div>
           ))}
 
           <button type="button" className="btn btn-secondary btn-sm" onClick={addMaterial}>
-            + Add material
+            <AddIcon /> Add material
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@ import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
+import { AddIcon, ProcurementIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { usePurchaseOrders } from '../useProcurement';
 import { getPoStatusMeta } from '../procurement.constants';
@@ -20,7 +21,7 @@ export default function PurchaseOrderListPage() {
         subtitle="Raw-material procurement. Receiving an order adds the quantity to inventory."
         actions={
           <Button variant="primary" to="/purchase-orders/new">
-            + New Purchase Order
+            <AddIcon /> New Purchase Order
           </Button>
         }
       />
@@ -32,12 +33,12 @@ export default function PurchaseOrderListPage() {
           <ErrorState text={error} onRetry={refresh} />
         ) : orders.length === 0 ? (
           <EmptyState
-            icon="🛒"
+            icon={ProcurementIcon}
             title="No purchase orders yet"
             text="Create one directly, or generate it from an inquiry's requirement analysis."
             action={
               <Button variant="primary" to="/purchase-orders/new">
-                + New Purchase Order
+                <AddIcon /> New Purchase Order
               </Button>
             }
           />

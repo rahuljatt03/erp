@@ -1,4 +1,5 @@
 /** Shared loading / empty / error placeholders so every list page behaves alike. */
+import { EmptyIcon, WarningIcon } from './icons';
 
 export function LoadingState({ label = 'Loading…' }) {
   return (
@@ -11,10 +12,10 @@ export function LoadingState({ label = 'Loading…' }) {
   );
 }
 
-export function EmptyState({ icon = '📋', title = 'Nothing here yet', text, action }) {
+export function EmptyState({ icon: Icon = EmptyIcon, title = 'Nothing here yet', text, action }) {
   return (
     <div className="state">
-      <div className="state__icon">{icon}</div>
+      <div className="state__icon">{Icon ? <Icon /> : null}</div>
       <div className="state__title">{title}</div>
       {text ? <p className="state__text">{text}</p> : null}
       {action}
@@ -25,7 +26,7 @@ export function EmptyState({ icon = '📋', title = 'Nothing here yet', text, ac
 export function ErrorState({ text = 'Something went wrong.', onRetry }) {
   return (
     <div className="state">
-      <div className="state__icon">⚠️</div>
+      <div className="state__icon"><WarningIcon /></div>
       <div className="state__title">Couldn’t load data</div>
       <p className="state__text">{text}</p>
       {onRetry && (

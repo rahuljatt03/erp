@@ -4,33 +4,48 @@
  * Adding a new module to the ERP is a one-line change here: drop in an item and
  * flip `soon` off once its routes exist. Items marked `soon` render disabled so
  * the product roadmap is visible without dead links.
+ *
+ * `icon` is a lucide-react component (from the shared icon registry), rendered
+ * by Sidebar as `<item.icon />`.
  */
+import {
+  DashboardIcon,
+  InquiryIcon,
+  QuotationIcon,
+  OrderIcon,
+  ProductionIcon,
+  InventoryIcon,
+  ProcurementIcon,
+  ReportsIcon,
+} from '../shared/components/icons';
+
 export const NAV_SECTIONS = [
   {
     label: 'Overview',
-    items: [{ to: '/', label: 'Dashboard', icon: '🏠', end: true }],
+    items: [{ to: '/', label: 'Dashboard', icon: DashboardIcon, end: true }],
   },
   {
     label: 'Sales',
     items: [
-      { to: '/inquiries', label: 'Inquiry', icon: '📨' },
-      { to: '/quotations', label: 'Quotations', icon: '🧾', soon: true },
-      { to: '/sales-orders', label: 'Sales Orders', icon: '📦' },
+      { to: '/inquiries', label: 'Inquiry', icon: InquiryIcon },
+      { to: '/quotations', label: 'Quotations', icon: QuotationIcon },
+      { to: '/sales-orders', label: 'Sales Orders', icon: OrderIcon },
     ],
   },
   {
     label: 'Manufacturing',
-    items: [
-      { to: '/bom', label: 'Bill of Materials', icon: '🧩' },
-      { to: '/production', label: 'Production', icon: '🏭' },
-    ],
+    items: [{ to: '/production', label: 'Production', icon: ProductionIcon }],
   },
   {
     label: 'Supply Chain',
     items: [
-      { to: '/inventory', label: 'Inventory', icon: '📊' },
-      { to: '/purchase-orders', label: 'Procurement', icon: '🛒' },
+      { to: '/inventory', label: 'Inventory', icon: InventoryIcon },
+      { to: '/purchase-orders', label: 'Procurement', icon: ProcurementIcon },
     ],
+  },
+  {
+    label: 'Insights',
+    items: [{ to: '/reports', label: 'Reports', icon: ReportsIcon }],
   },
 ];
 

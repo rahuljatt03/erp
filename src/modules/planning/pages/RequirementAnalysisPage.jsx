@@ -9,6 +9,13 @@ import { formatNumber } from '../../../shared/utils/format';
 import { getStatusMeta } from '../../inquiry/inquiry.constants';
 import { useRequirementAnalysis } from '../useRequirementAnalysis';
 import { productionService } from '../../production/production.service';
+import {
+  BackIcon,
+  FinishedGoodsIcon,
+  ProcurementIcon,
+  ProductionIcon,
+  SuccessIcon,
+} from '../../../shared/components/icons';
 
 const FINISHED_STATUS = {
   in_stock: { tone: 'success', label: 'In stock' },
@@ -38,7 +45,7 @@ export default function RequirementAnalysisPage() {
           title="Requirement analysis"
           actions={
             <Button to="/inquiries" variant="secondary">
-              ← Back to inquiries
+              <BackIcon /> Back to inquiries
             </Button>
           }
         />
@@ -121,7 +128,7 @@ export default function RequirementAnalysisPage() {
         actions={
           <>
             <Button to={`/inquiries/${inquiry.id}`} variant="ghost">
-              ← Back to inquiry
+              <BackIcon /> Back to inquiry
             </Button>
             <Button to="/inventory" variant="secondary">
               View inventory
@@ -158,7 +165,7 @@ export default function RequirementAnalysisPage() {
 
         {/* ---- Finished goods: build plan ---- */}
         <Card
-          title="🏭 Finished goods — build plan"
+          title={<><FinishedGoodsIcon size={16} /> Finished goods — build plan</>}
           bodyFlush
           actions={<span className="muted text-sm">Ordered − in stock = to build</span>}
         >
@@ -185,11 +192,7 @@ export default function RequirementAnalysisPage() {
                           <div className="muted text-sm">Not in finished-goods inventory (treated as 0)</div>
                         ) : null}
                         {row.toBuild > 0 ? (
-                          <div className="muted text-sm">
-                            {row.materialSource === 'bom'
-                              ? '📋 materials from BOM'
-                              : '≈ materials estimated from inquiry'}
-                          </div>
+                          <div className="muted text-sm">≈ materials estimated from inquiry</div>
                         ) : null}
                       </td>
                       <td className="num">
@@ -212,13 +215,13 @@ export default function RequirementAnalysisPage() {
 
         {/* ---- Raw materials: procurement plan ---- */}
         <Card
-          title="🛒 Raw materials — procurement plan"
+          title={<><ProcurementIcon size={16} /> Raw materials — procurement plan</>}
           bodyFlush
           actions={<span className="muted text-sm">Required for build − in stock = to purchase</span>}
         >
           {rawMaterials.length === 0 ? (
             <EmptyState
-              icon="✅"
+              icon={SuccessIcon}
               title="Nothing to purchase"
               text="Every product on this inquiry is already in finished-goods stock, so no raw materials are needed."
             />
@@ -267,12 +270,6 @@ export default function RequirementAnalysisPage() {
           )}
         </Card>
 
-        <div className="banner">
-          ℹ️ Raw-material demand is scaled to the quantity actually being built (ordered − finished
-          stock). Purchasing and production orders will be generated from this plan in the upcoming
-          Procurement and Production modules.
-        </div>
-
         <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
           <Button
             variant="primary"
@@ -280,7 +277,7 @@ export default function RequirementAnalysisPage() {
             disabled={purchaseLines.length === 0}
             title={purchaseLines.length === 0 ? 'Nothing to purchase' : 'Create a purchase order for the shortage'}
           >
-            🛒 Create purchase order{purchaseLines.length ? ` (${purchaseLines.length})` : ''}
+            <ProcurementIcon /> Create purchase order{purchaseLines.length ? ` (${purchaseLines.length})` : ''}
           </Button>
           <Button
             variant="secondary"
@@ -288,9 +285,14 @@ export default function RequirementAnalysisPage() {
             disabled={buildLines.length === 0 || creatingWOs}
             title={buildLines.length === 0 ? 'Nothing to build' : 'Create work orders for the build plan'}
           >
-            {creatingWOs
-              ? 'Creating…'
-              : `🏭 Create production order${buildLines.length > 1 ? 's' : ''}${buildLines.length ? ` (${buildLines.length})` : ''}`}
+            {creatingWOs ? (
+              'Creating…'
+            ) : (
+              <>
+                <ProductionIcon /> Create production order{buildLines.length > 1 ? 's' : ''}
+                {buildLines.length ? ` (${buildLines.length})` : ''}
+              </>
+            )}
           </Button>
         </div>
       </div>

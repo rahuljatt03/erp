@@ -36,24 +36,12 @@ function matchRawStock(materialName, rawStock) {
   return rawStock.find((stock) => norm(stock.name) === name) || null;
 }
 
-/** Match an inquiry line to a BOM by product code first, then by name. */
-function matchBom(line, boms) {
-  const code = norm(line.productCode);
-  const name = norm(line.productName);
-  return (
-    (code && boms.find((bom) => norm(bom.productCode) === code)) ||
-    boms.find((bom) => norm(bom.productName) === name) ||
-    null
-  );
-}
-
 /**
  * @param {import('../inquiry/inquiry.types').Inquiry} inquiry
  * @param {import('../inventory/inventory.types').FinishedGood[]} finishedGoods
  * @param {import('../inventory/inventory.types').RawMaterialStock[]} rawStock
- * @param {import('../bom/bom.types').Bom[]} boms
  */
-export function analyzeInquiry(inquiry, finishedGoods = [], rawStock = [], boms = []) {
+export function analyzeInquiry(inquiry, finishedGoods = [], rawStock = []) {
   const finishedRows = [];
   /** key `name|unit` -> aggregated demand */
   const demand = new Map();
@@ -64,25 +52,16 @@ export function analyzeInquiry(inquiry, finishedGoods = [], rawStock = [], boms 
     const inStock = match ? Number(match.onHand) || 0 : 0;
     const toBuild = Math.max(0, ordered - inStock);
     const ratio = ordered > 0 ? toBuild / ordered : 0;
-    const bom = matchBom(line, boms);
 
-    // Prefer the product's BOM (exact per-unit × toBuild). Fall back to the
-    // inquiry's own line totals, scaled to the build quantity, when there's no BOM.
-    const sources = bom
-      ? (bom.components ?? []).map((component) => ({
-          materialName: component.materialName,
-          materialCode: component.materialCode || '',
-          rawMaterialId: component.rawMaterialId ?? null,
-          unit: component.unit,
-          required: (Number(component.quantityPerUnit) || 0) * toBuild,
-        }))
-      : (line.rawMaterials ?? []).map((material) => ({
-          materialName: material.materialName,
-          materialCode: '',
-          rawMaterialId: null,
-          unit: material.unit,
-          required: (Number(material.quantity) || 0) * ratio,
-        }));
+    // Material demand comes from the inquiry's own line totals, scaled to the
+    // build quantity (toBuild / ordered).
+    const sources = (line.rawMaterials ?? []).map((material) => ({
+      materialName: material.materialName,
+      materialCode: '',
+      rawMaterialId: null,
+      unit: material.unit,
+      required: (Number(material.quantity) || 0) * ratio,
+    }));
 
     // Per-line materials (used to seed production work orders).
     const lineMaterials = [];
@@ -118,8 +97,6 @@ export function analyzeInquiry(inquiry, finishedGoods = [], rawStock = [], boms 
       finishedGoodId: match ? match.id : null,
       sku: match ? match.sku : '',
       materials: lineMaterials,
-      materialSource: bom ? 'bom' : 'inquiry',
-      bomId: bom ? bom.id : null,
       status: toBuild === 0 ? 'in_stock' : inStock > 0 ? 'partial' : 'to_build',
     });
   }

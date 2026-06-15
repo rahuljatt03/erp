@@ -26,6 +26,18 @@ export const finishedGoodsService = {
     return finishedCollection.update(id, { onHand: Number(onHand) || 0 });
   },
 
+  /** Add a brand-new finished-good record to inventory. */
+  async create({ sku, name, unit, onHand }) {
+    await delay(120);
+    return finishedCollection.insert({
+      id: createId('fg'),
+      sku: (sku ?? '').trim(),
+      name: (name ?? '').trim(),
+      unit: unit || 'pcs',
+      onHand: Number(onHand) || 0,
+    });
+  },
+
   /**
    * Add produced units to finished-goods stock. Matches by id, then SKU/name,
    * else creates the record. Called when a production order is completed.
@@ -72,6 +84,18 @@ export const rawMaterialsService = {
   async setOnHand(id, onHand) {
     await delay(120);
     return rawCollection.update(id, { onHand: Number(onHand) || 0 });
+  },
+
+  /** Add a brand-new raw-material record to inventory. */
+  async create({ code, name, unit, onHand }) {
+    await delay(120);
+    return rawCollection.insert({
+      id: createId('rw'),
+      code: (code ?? '').trim(),
+      name: (name ?? '').trim(),
+      unit: unit || 'kg',
+      onHand: Number(onHand) || 0,
+    });
   },
 
   /**

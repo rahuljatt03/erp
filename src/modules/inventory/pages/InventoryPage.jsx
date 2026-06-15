@@ -4,7 +4,8 @@ import Tabs from '../../../shared/components/Tabs';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { useFinishedGoods, useRawMaterials } from '../useInventory';
 import { finishedGoodsService, rawMaterialsService } from '../inventory.service';
-import StockTable from '../components/StockTable';
+import StockSection from '../components/StockSection';
+import { FinishedGoodsIcon, RawMaterialIcon } from '../../../shared/components/icons';
 
 export default function InventoryPage() {
   const finished = useFinishedGoods();
@@ -34,41 +35,44 @@ export default function InventoryPage() {
         </Card>
       ) : (
         <div className="stack">
-          <div className="banner">
-            ✏️ On-hand quantities are editable — changes save automatically and feed straight into the
-            requirement analysis on each inquiry.
-          </div>
-
           <Tabs
             tabs={[
               {
                 key: 'finished',
-                label: '🏭 Finished goods',
+                label: (<><FinishedGoodsIcon size={15} /> Finished goods</>),
                 badge: finished.items.length,
                 content: (
-                  <Card bodyFlush>
-                    <StockTable
-                      items={finished.items}
-                      codeKey="sku"
-                      codeLabel="SKU"
-                      onSave={(id, onHand) => finishedGoodsService.setOnHand(id, onHand)}
-                    />
-                  </Card>
+                  <StockSection
+                    items={finished.items}
+                    codeKey="sku"
+                    codeLabel="SKU"
+                    itemLabel="finished good"
+                    defaultUnit="pcs"
+                    onSave={(id, onHand) => finishedGoodsService.setOnHand(id, onHand)}
+                    onAdd={async (draft) => {
+                      await finishedGoodsService.create(draft);
+                      await finished.refresh();
+                    }}
+                  />
                 ),
               },
               {
                 key: 'raw',
-                label: '🧱 Raw materials',
+                label: (<><RawMaterialIcon size={15} /> Raw materials</>),
                 badge: raw.items.length,
                 content: (
-                  <Card bodyFlush>
-                    <StockTable
-                      items={raw.items}
-                      codeKey="code"
-                      codeLabel="Code"
-                      onSave={(id, onHand) => rawMaterialsService.setOnHand(id, onHand)}
-                    />
-                  </Card>
+                  <StockSection
+                    items={raw.items}
+                    codeKey="code"
+                    codeLabel="Code"
+                    itemLabel="raw material"
+                    defaultUnit="kg"
+                    onSave={(id, onHand) => rawMaterialsService.setOnHand(id, onHand)}
+                    onAdd={async (draft) => {
+                      await rawMaterialsService.create(draft);
+                      await raw.refresh();
+                    }}
+                  />
                 ),
               },
             ]}

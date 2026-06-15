@@ -1,6 +1,6 @@
-import { NavLink } from 'react-router-dom';
-import { NAV_SECTIONS } from '../navigation';
-import { company } from '../../shared/session';
+import { NavLink } from "react-router-dom";
+import { NAV_SECTIONS } from "../navigation";
+import { company } from "../../shared/session";
 
 export default function Sidebar({ onToggle, collapsed }) {
   return (
@@ -15,7 +15,7 @@ export default function Sidebar({ onToggle, collapsed }) {
           type="button"
           className="sidebar__toggle"
           onClick={onToggle}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           aria-expanded={!collapsed}
         >
           <span />
@@ -29,8 +29,14 @@ export default function Sidebar({ onToggle, collapsed }) {
           <div className="sidebar__section-label">{section.label}</div>
           {section.items.map((item) =>
             item.soon ? (
-              <span className="nav-item is-disabled" key={item.label} title="Coming soon">
-                <span className="nav-item__icon">{item.icon}</span>
+              <span
+                className="nav-item is-disabled"
+                key={item.label}
+                title="Coming soon"
+              >
+                <span className="nav-item__icon">
+                  {item.icon ? <item.icon /> : null}
+                </span>
                 {item.label}
                 <span className="nav-item__soon">Soon</span>
               </span>
@@ -39,17 +45,19 @@ export default function Sidebar({ onToggle, collapsed }) {
                 key={item.label}
                 to={item.to}
                 end={item.end}
-                className={({ isActive }) => `nav-item ${isActive ? 'is-active' : ''}`}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? "is-active" : ""}`
+                }
               >
-                <span className="nav-item__icon">{item.icon}</span>
+                <span className="nav-item__icon">
+                  {item.icon ? <item.icon /> : null}
+                </span>
                 {item.label}
               </NavLink>
             ),
           )}
         </nav>
       ))}
-
-      <div className="sidebar__footer">v0.1 · Inquiry module</div>
     </aside>
   );
 }

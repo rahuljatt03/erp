@@ -5,70 +5,195 @@ import Button from '../../shared/components/Button';
 import Card from '../../shared/components/Card';
 import Badge from '../../shared/components/Badge';
 import { LoadingState, EmptyState } from '../../shared/components/states';
-import { formatDate } from '../../shared/utils/format';
+import {
+  AddIcon,
+  InquiryIcon,
+  QuotationIcon,
+  OrderIcon,
+  ProductionIcon,
+  ProcurementIcon,
+  WarningIcon,
+  SuccessIcon,
+} from '../../shared/components/icons';
+import { formatDate, formatNumber, todayIso } from '../../shared/utils/format';
 import { useInquiries } from '../inquiry/useInquiries';
+import { useQuotations } from '../quotation/useQuotations';
+import { useSalesOrders } from '../sales/useSales';
+import { useProductionOrders } from '../production/useProduction';
+import { usePurchaseOrders } from '../procurement/useProcurement';
+import { useFinishedGoods, useRawMaterials } from '../inventory/useInventory';
 import { getStatusMeta } from '../inquiry/inquiry.constants';
-import { summariseProducts, countMaterials } from '../inquiry/inquiry.helpers';
+import { summariseProducts } from '../inquiry/inquiry.helpers';
+import {
+  inquiryMetrics,
+  quotationMetrics,
+  salesMetrics,
+  productionMetrics,
+  procurementMetrics,
+  inventoryMetrics,
+} from './dashboard.metrics';
 
-function computeStats(inquiries) {
-  return {
-    total: inquiries.length,
-    underReview: inquiries.filter((inquiry) => inquiry.status === 'under_review').length,
-    drafts: inquiries.filter((inquiry) => inquiry.status === 'draft').length,
-    materials: inquiries.reduce((sum, inquiry) => sum + countMaterials(inquiry), 0),
-  };
+/** A single headline number with a module glyph. */
+function Kpi({ label, value, meta, icon: Icon, tone = 'neutral' }) {
+  const iconClass = tone === 'neutral' ? 'dash-icon' : `dash-icon dash-icon--${tone}`;
+  return (
+    <div className="stat">
+      <div className="row-between">
+        <div className="stat__label">{label}</div>
+        <div className={iconClass}>
+          <Icon />
+        </div>
+      </div>
+      <div className="stat__value">{value}</div>
+      {meta ? <div className="stat__meta">{meta}</div> : null}
+    </div>
+  );
+}
+
+/** A row inside a flush card — clickable (navigates) when `to` is set. */
+function DashRow({ to, tone = 'neutral', icon: Icon, label, sub, value }) {
+  const navigate = useNavigate();
+  const iconClass = tone === 'neutral' ? 'dash-icon' : `dash-icon dash-icon--${tone}`;
+  return (
+    <div
+      className={`dash-row${to ? ' is-clickable' : ''}`}
+      onClick={to ? () => navigate(to) : undefined}
+      role={to ? 'button' : undefined}
+      tabIndex={to ? 0 : undefined}
+      onKeyDown={to ? (event) => event.key === 'Enter' && navigate(to) : undefined}
+    >
+      <div className="dash-row__main">
+        {Icon ? (
+          <div className={iconClass}>
+            <Icon />
+          </div>
+        ) : null}
+        <div className="dash-row__text">
+          <div className="dash-row__label">{label}</div>
+          {sub ? <div className="dash-row__sub">{sub}</div> : null}
+        </div>
+      </div>
+      {value != null ? <div className="dash-row__value">{value}</div> : null}
+    </div>
+  );
 }
 
 export default function DashboardPage() {
-  const { inquiries, loading } = useInquiries();
   const navigate = useNavigate();
-  const stats = useMemo(() => computeStats(inquiries), [inquiries]);
+  const { inquiries, loading: inqLoading } = useInquiries();
+  const { quotes, loading: quoteLoading } = useQuotations();
+  const { orders: salesOrders, loading: soLoading } = useSalesOrders();
+  const { orders: workOrders, loading: woLoading } = useProductionOrders();
+  const { orders: purchaseOrders, loading: poLoading } = usePurchaseOrders();
+  const { items: finishedGoods, loading: fgLoading } = useFinishedGoods();
+  const { items: rawMaterials, loading: rawLoading } = useRawMaterials();
+
+  const loading =
+    inqLoading || quoteLoading || soLoading || woLoading || poLoading || fgLoading || rawLoading;
+
+  const m = useMemo(() => {
+    const today = todayIso();
+    return {
+      inq: inquiryMetrics(inquiries),
+      quote: quotationMetrics(quotes, today),
+      sales: salesMetrics(salesOrders),
+      prod: productionMetrics(workOrders),
+      proc: procurementMetrics(purchaseOrders),
+      inv: inventoryMetrics(finishedGoods, rawMaterials),
+    };
+  }, [inquiries, quotes, salesOrders, workOrders, purchaseOrders, finishedGoods, rawMaterials]);
+
   const recent = inquiries.slice(0, 5);
 
   return (
     <>
       <PageHeader
         title="Dashboard"
-        subtitle="Manufacturing ERP — operations overview"
-        actions={
-          <Button variant="primary" to="/inquiries/new">
-            + New Inquiry
-          </Button>
-        }
+        subtitle="Manufacturing ERP — operations across every module"
       />
-
-      <div className="banner" style={{ marginBottom: 20 }}>
-        👋 Welcome! The <strong>&nbsp;Inquiry&nbsp;</strong> module is live. Quotations, Bill of
-        Materials, Production and Inventory will plug into this same shell as we build them.
-      </div>
 
       {loading ? (
         <LoadingState label="Loading overview…" />
       ) : (
         <div className="stack">
+          {/* Headline KPIs spanning the sales → make/buy → stock pipeline */}
           <div className="stat-grid">
-            <div className="stat">
-              <div className="stat__label">Total inquiries</div>
-              <div className="stat__value">{stats.total}</div>
-              <div className="stat__meta">Across all statuses</div>
-            </div>
-            <div className="stat">
-              <div className="stat__label">Under review</div>
-              <div className="stat__value">{stats.underReview}</div>
-              <div className="stat__meta">Awaiting assessment</div>
-            </div>
-            <div className="stat">
-              <div className="stat__label">Drafts</div>
-              <div className="stat__value">{stats.drafts}</div>
-              <div className="stat__meta">Not yet submitted</div>
-            </div>
-            <div className="stat">
-              <div className="stat__label">Raw materials listed</div>
-              <div className="stat__value">{stats.materials}</div>
-              <div className="stat__meta">Demand signals for procurement</div>
-            </div>
+            <Kpi
+              label="Open inquiries"
+              value={m.inq.open}
+              meta={`of ${m.inq.total} total`}
+              icon={InquiryIcon}
+              tone="info"
+            />
+            <Kpi
+              label="Active quotations"
+              value={m.quote.active}
+              meta={`${formatNumber(m.quote.activeValue)} quoted value`}
+              icon={QuotationIcon}
+              tone="info"
+            />
+            <Kpi
+              label="Active work orders"
+              value={m.prod.active}
+              meta={`${formatNumber(m.prod.outstandingUnits)} units to build`}
+              icon={ProductionIcon}
+              tone="warning"
+            />
+            <Kpi
+              label="POs awaiting receipt"
+              value={m.proc.awaiting}
+              meta={`${formatNumber(m.proc.openValue)} on order`}
+              icon={ProcurementIcon}
+              tone="info"
+            />
+            <Kpi
+              label="Stock alerts"
+              value={m.inv.outOfStockCount}
+              meta={m.inv.outOfStockCount === 0 ? 'all items in stock' : 'items at zero on-hand'}
+              icon={m.inv.outOfStockCount === 0 ? SuccessIcon : WarningIcon}
+              tone={m.inv.outOfStockCount === 0 ? 'success' : 'danger'}
+            />
           </div>
 
+          {/* Sales pipeline funnel */}
+          <Card
+            title="Sales pipeline"
+            actions={
+              <Button to="/inquiries" variant="secondary" size="sm">
+                Inquiries
+              </Button>
+            }
+            bodyFlush
+          >
+            <div className="dash-list">
+              <DashRow
+                to="/inquiries"
+                icon={InquiryIcon}
+                tone="info"
+                label="Inquiries"
+                sub={`${m.inq.open} still open`}
+                value={m.inq.total}
+              />
+              <DashRow
+                to="/quotations"
+                icon={QuotationIcon}
+                tone="info"
+                label="Quotations"
+                sub={`${formatNumber(m.quote.activeValue)} active value`}
+                value={m.quote.total}
+              />
+              <DashRow
+                to="/sales-orders"
+                icon={OrderIcon}
+                tone="success"
+                label="Sales orders"
+                sub={`${formatNumber(m.sales.openValue)} open · ${m.sales.fulfilled} fulfilled`}
+                value={m.sales.total}
+              />
+            </div>
+          </Card>
+
+          {/* Recent inquiries — the entry point of the whole flow */}
           <Card
             title="Recent inquiries"
             actions={
@@ -80,12 +205,12 @@ export default function DashboardPage() {
           >
             {recent.length === 0 ? (
               <EmptyState
-                icon="📨"
+                icon={InquiryIcon}
                 title="No inquiries yet"
                 text="Create your first inquiry to get started."
                 action={
                   <Button variant="primary" to="/inquiries/new">
-                    + New Inquiry
+                    <AddIcon /> New Inquiry
                   </Button>
                 }
               />

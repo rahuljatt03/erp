@@ -13,6 +13,7 @@ import {
   blankRawMaterial,
 } from '../inquiry.constants';
 import LineItemEditor from '../components/LineItemEditor';
+import { AddIcon } from '../../../shared/components/icons';
 
 /** Validates a draft and returns `{ errors, hasErrors }`. */
 function validate(draft) {
@@ -207,7 +208,7 @@ export default function InquiryFormPage() {
           <div className="row-between" style={{ marginBottom: 12 }}>
             <h2 style={{ fontSize: 17 }}>Products & raw materials</h2>
             <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-              + Add product
+              <AddIcon /> Add product
             </Button>
           </div>
 

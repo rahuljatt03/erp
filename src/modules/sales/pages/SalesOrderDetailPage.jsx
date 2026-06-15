@@ -10,6 +10,12 @@ import { useSalesOrder } from '../useSales';
 import { salesService } from '../sales.service';
 import { getSoStatusMeta } from '../sales.constants';
 import { soValue } from '../sales.helpers';
+import {
+  BackIcon,
+  AnalysisIcon,
+  EditIcon,
+  DeleteIcon,
+} from '../../../shared/components/icons';
 
 function Detail({ label, children }) {
   return (
@@ -46,7 +52,7 @@ export default function SalesOrderDetailPage() {
           title="Sales order"
           actions={
             <Button to="/sales-orders" variant="secondary">
-              ← Back to list
+              <BackIcon /> Back to list
             </Button>
           }
         />
@@ -73,18 +79,18 @@ export default function SalesOrderDetailPage() {
         actions={
           <>
             <Button to="/sales-orders" variant="ghost">
-              ← Back
+              <BackIcon /> Back
             </Button>
             {order.sourceInquiryId ? (
               <Button to={`/inquiries/${order.sourceInquiryId}/requirements`} variant="primary">
-                📊 Requirement analysis
+                <AnalysisIcon /> Requirement analysis
               </Button>
             ) : null}
             <Button to={`/sales-orders/${order.id}/edit`} variant="secondary">
-              ✎ Edit
+              <EditIcon /> Edit
             </Button>
             <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting…' : '🗑 Delete'}
+              {deleting ? 'Deleting…' : (<><DeleteIcon /> Delete</>)}
             </Button>
           </>
         }

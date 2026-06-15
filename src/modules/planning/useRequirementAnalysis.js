@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useInquiry } from '../inquiry/useInquiries';
 import { useFinishedGoods, useRawMaterials } from '../inventory/useInventory';
-import { useBoms } from '../bom/useBom';
 import { analyzeInquiry } from './requirements.engine';
 
 /**
@@ -12,17 +11,16 @@ export function useRequirementAnalysis(inquiryId) {
   const { inquiry, loading: inquiryLoading, error: inquiryError } = useInquiry(inquiryId);
   const { items: finishedGoods, loading: fgLoading } = useFinishedGoods();
   const { items: rawStock, loading: rawLoading } = useRawMaterials();
-  const { items: boms, loading: bomLoading } = useBoms();
 
   const analysis = useMemo(
-    () => (inquiry ? analyzeInquiry(inquiry, finishedGoods, rawStock, boms) : null),
-    [inquiry, finishedGoods, rawStock, boms],
+    () => (inquiry ? analyzeInquiry(inquiry, finishedGoods, rawStock) : null),
+    [inquiry, finishedGoods, rawStock],
   );
 
   return {
     inquiry,
     analysis,
-    loading: inquiryLoading || fgLoading || rawLoading || bomLoading,
+    loading: inquiryLoading || fgLoading || rawLoading,
     error: inquiryError,
   };
 }

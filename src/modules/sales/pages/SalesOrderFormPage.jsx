@@ -10,6 +10,7 @@ import { formatNumber } from '../../../shared/utils/format';
 import { salesService } from '../sales.service';
 import { SO_STATUSES, UNITS, blankSODraft, blankSOItem } from '../sales.constants';
 import { soValue } from '../sales.helpers';
+import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -143,7 +144,7 @@ export default function SalesOrderFormPage() {
 
       {draft.sourceInquiryNo ? (
         <div className="banner" style={{ marginBottom: 18 }}>
-          🔗 Converting inquiry <strong>&nbsp;{draft.sourceInquiryNo}</strong>. Saving will mark that
+          <LinkIcon size={16} /> Converting inquiry <strong>&nbsp;{draft.sourceInquiryNo}</strong>. Saving will mark that
           inquiry as <strong>&nbsp;Converted</strong>.
         </div>
       ) : null}
@@ -206,7 +207,7 @@ export default function SalesOrderFormPage() {
           title="Order lines"
           actions={
             <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-              + Add line
+              <AddIcon /> Add line
             </Button>
           }
           bodyFlush
@@ -303,7 +304,7 @@ export default function SalesOrderFormPage() {
                           onClick={() => removeItem(item.id)}
                           disabled={draft.items.length === 1}
                         >
-                          ✕
+                          <RemoveIcon />
                         </button>
                       </td>
                     </tr>

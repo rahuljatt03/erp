@@ -4,6 +4,7 @@ import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
+import { AddIcon, InquiryIcon } from '../../../shared/components/icons';
 import { formatDate } from '../../../shared/utils/format';
 import { useInquiries } from '../useInquiries';
 import { getStatusMeta } from '../inquiry.constants';
@@ -20,7 +21,7 @@ export default function InquiryListPage() {
         subtitle="Customer order inquiries — products, quantities, delivery dates and required raw materials."
         actions={
           <Button variant="primary" to="/inquiries/new">
-            + New Inquiry
+            <AddIcon /> New Inquiry
           </Button>
         }
       />
@@ -32,12 +33,12 @@ export default function InquiryListPage() {
           <ErrorState text={error} onRetry={refresh} />
         ) : inquiries.length === 0 ? (
           <EmptyState
-            icon="📨"
+            icon={InquiryIcon}
             title="No inquiries yet"
             text="Create your first inquiry to capture a customer's product requirements."
             action={
               <Button variant="primary" to="/inquiries/new">
-                + New Inquiry
+                <AddIcon /> New Inquiry
               </Button>
             }
           />

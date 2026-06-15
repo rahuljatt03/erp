@@ -10,6 +10,13 @@ import { useProductionOrder } from '../useProduction';
 import { productionService } from '../production.service';
 import { getWoStatusMeta } from '../production.constants';
 import { woProgress } from '../production.helpers';
+import {
+  BackIcon,
+  EditIcon,
+  DeleteIcon,
+  ProductionIcon,
+  SuccessIcon,
+} from '../../../shared/components/icons';
 
 function Detail({ label, children }) {
   return (
@@ -69,7 +76,7 @@ export default function ProductionOrderDetailPage() {
           title="Work order"
           actions={
             <Button to="/production" variant="secondary">
-              ← Back to list
+              <BackIcon /> Back to list
             </Button>
           }
         />
@@ -98,13 +105,13 @@ export default function ProductionOrderDetailPage() {
         actions={
           <>
             <Button to="/production" variant="ghost">
-              ← Back
+              <BackIcon /> Back
             </Button>
             <Button to={`/production/${order.id}/edit`} variant="secondary">
-              ✎ Edit
+              <EditIcon /> Edit
             </Button>
             <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting…' : '🗑 Delete'}
+              {deleting ? 'Deleting…' : (<><DeleteIcon /> Delete</>)}
             </Button>
           </>
         }
@@ -144,7 +151,7 @@ export default function ProductionOrderDetailPage() {
           ) : null}
         </Card>
 
-        {flash ? <div className="banner">✅ {flash}</div> : null}
+        {flash ? <div className="banner"><SuccessIcon size={16} /> {flash}</div> : null}
 
         <Card title="Materials consumed" bodyFlush>
           <div className="table-wrap">
@@ -203,13 +210,13 @@ export default function ProductionOrderDetailPage() {
                 </span>
               </div>
               <Button variant="primary" onClick={handleProduce} disabled={producing}>
-                {producing ? 'Producing…' : '🏭 Report production'}
+                {producing ? 'Producing…' : (<><ProductionIcon /> Report production</>)}
               </Button>
             </div>
           ) : (
             <div className="row" style={{ padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
               <span className="text-success">
-                {order.status === 'cancelled' ? 'Work order cancelled.' : '✓ Fully produced — finished goods are in inventory.'}
+                {order.status === 'cancelled' ? 'Work order cancelled.' : (<><SuccessIcon size={16} /> Fully produced — finished goods are in inventory.</>)}
               </span>
             </div>
           )}

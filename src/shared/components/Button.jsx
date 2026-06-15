@@ -1,14 +1,18 @@
 /**
- * Button — supports rendering as a real <button> or, with `to`, a router <Link>
- * styled identically. Keeps every clickable in the app visually consistent.
+ * Button — thin wrapper over the shadcn <Button> primitive that preserves the
+ * app's existing API (variant primary/secondary/ghost/danger, size="sm", and
+ * `to` for a router <Link>). Swapping the implementation here re-skins every
+ * call site to shadcn without touching the pages that import it.
  */
 import { Link } from 'react-router-dom';
+import { Button as UiButton } from '@/components/ui/button';
 
-const VARIANTS = {
-  primary: 'btn-primary',
-  secondary: 'btn-secondary',
-  ghost: 'btn-ghost',
-  danger: 'btn-danger',
+// Map the app's semantic variants onto shadcn's variant names.
+const VARIANT_MAP = {
+  primary: 'default',
+  secondary: 'secondary',
+  ghost: 'ghost',
+  danger: 'destructive',
 };
 
 export default function Button({
@@ -20,26 +24,23 @@ export default function Button({
   className = '',
   ...rest
 }) {
-  const classes = [
-    'btn',
-    VARIANTS[variant] ?? VARIANTS.secondary,
-    size === 'sm' ? 'btn-sm' : '',
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const uiVariant = VARIANT_MAP[variant] ?? 'secondary';
+  const uiSize = size === 'sm' ? 'sm' : 'default';
 
   if (to) {
+    // asChild renders the styled button as the router Link.
     return (
-      <Link to={to} className={classes} {...rest}>
-        {children}
-      </Link>
+      <UiButton asChild variant={uiVariant} size={uiSize} className={className}>
+        <Link to={to} {...rest}>
+          {children}
+        </Link>
+      </UiButton>
     );
   }
 
   return (
-    <button type={type} className={classes} {...rest}>
+    <UiButton type={type} variant={uiVariant} size={uiSize} className={className} {...rest}>
       {children}
-    </button>
+    </UiButton>
   );
 }

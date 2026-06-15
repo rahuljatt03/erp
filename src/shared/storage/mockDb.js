@@ -6,7 +6,7 @@
  * rewrite the module services (to call `fetch`) — components and hooks, which
  * depend on the async service interface, stay untouched.
  *
- * Reusable for every future module: products, inventory, BOM, production, etc.
+ * Reusable for every future module: products, inventory, production, etc.
  *
  * @template {{ id: string }} T
  * @typedef {object} Collection

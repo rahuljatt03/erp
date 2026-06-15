@@ -7,6 +7,7 @@ import Field from '../../../shared/components/Field';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { productionService } from '../production.service';
 import { WO_STATUSES, UNITS, blankWODraft, blankWOMaterial } from '../production.constants';
+import { AddIcon, RemoveIcon } from '../../../shared/components/icons';
 
 function validate(draft) {
   const errors = { fields: {}, form: null };
@@ -185,7 +186,7 @@ export default function ProductionOrderFormPage() {
           title="Materials to consume"
           actions={
             <Button type="button" variant="secondary" size="sm" onClick={addMaterial}>
-              + Add material
+              <AddIcon /> Add material
             </Button>
           }
           bodyFlush
@@ -254,7 +255,7 @@ export default function ProductionOrderFormPage() {
                         onClick={() => removeMaterial(material.id)}
                         disabled={draft.materials.length === 1}
                       >
-                        ✕
+                        <RemoveIcon />
                       </button>
                     </td>
                   </tr>

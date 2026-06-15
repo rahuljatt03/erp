@@ -15,6 +15,7 @@ import {
 } from '../procurement.constants';
 import { poValue } from '../procurement.helpers';
 import { formatNumber } from '../../../shared/utils/format';
+import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -159,7 +160,7 @@ export default function PurchaseOrderFormPage() {
 
       {draft.sourceInquiryNo ? (
         <div className="banner" style={{ marginBottom: 18 }}>
-          🔗 Prefilled from the requirement analysis of <strong>&nbsp;{draft.sourceInquiryNo}</strong>.
+          <LinkIcon size={16} /> Prefilled from the requirement analysis of <strong>&nbsp;{draft.sourceInquiryNo}</strong>.
           Review quantities and set the supplier before saving.
         </div>
       ) : null}
@@ -227,7 +228,7 @@ export default function PurchaseOrderFormPage() {
           title="Materials"
           actions={
             <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-              + Add line
+              <AddIcon /> Add line
             </Button>
           }
           bodyFlush
@@ -314,7 +315,7 @@ export default function PurchaseOrderFormPage() {
                           onClick={() => removeItem(item.id)}
                           disabled={draft.items.length === 1}
                         >
-                          ✕
+                          <RemoveIcon />
                         </button>
                       </td>
                     </tr>

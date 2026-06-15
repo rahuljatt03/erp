@@ -4,6 +4,7 @@ import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
+import { AddIcon, ProductionIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { useProductionOrders } from '../useProduction';
 import { getWoStatusMeta } from '../production.constants';
@@ -19,7 +20,7 @@ export default function ProductionOrderListPage() {
         subtitle="Work orders. Completing one consumes raw materials and adds finished goods to inventory."
         actions={
           <Button variant="primary" to="/production/new">
-            + New Work Order
+            <AddIcon /> New Work Order
           </Button>
         }
       />
@@ -31,12 +32,12 @@ export default function ProductionOrderListPage() {
           <ErrorState text={error} onRetry={refresh} />
         ) : orders.length === 0 ? (
           <EmptyState
-            icon="🏭"
+            icon={ProductionIcon}
             title="No work orders yet"
             text="Create one directly, or generate work orders from an inquiry's requirement analysis."
             action={
               <Button variant="primary" to="/production/new">
-                + New Work Order
+                <AddIcon /> New Work Order
               </Button>
             }
           />

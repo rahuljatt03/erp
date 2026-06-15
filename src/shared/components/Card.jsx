@@ -1,14 +1,26 @@
-/** Surface container with an optional header (title + right-aligned actions). */
+/**
+ * Surface container — wraps the shadcn <Card> primitives while preserving the
+ * app's API (title, right-aligned `actions`, `bodyFlush`, className). Existing
+ * pages keep calling <Card title=... actions=...> and now render shadcn.
+ */
+import {
+  Card as UiCard,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardContent,
+} from '@/components/ui/card';
+
 export default function Card({ title, actions, children, bodyFlush = false, className = '' }) {
   return (
-    <section className={`card ${className}`.trim()}>
+    <UiCard className={`gap-0 py-0 ${className}`.trim()}>
       {(title || actions) && (
-        <header className="card__header">
-          {title ? <h3 className="card__title">{title}</h3> : <span />}
-          {actions ? <div className="row">{actions}</div> : null}
-        </header>
+        <CardHeader className="border-b py-4">
+          {title ? <CardTitle className="text-base">{title}</CardTitle> : <span />}
+          {actions ? <CardAction className="flex items-center gap-2">{actions}</CardAction> : null}
+        </CardHeader>
       )}
-      <div className={bodyFlush ? 'card__body--flush' : 'card__body'}>{children}</div>
-    </section>
+      <CardContent className={bodyFlush ? 'px-0 py-0' : 'py-4'}>{children}</CardContent>
+    </UiCard>
   );
 }

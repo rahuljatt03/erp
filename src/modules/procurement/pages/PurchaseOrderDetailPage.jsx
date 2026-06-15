@@ -10,6 +10,13 @@ import { usePurchaseOrder } from '../useProcurement';
 import { procurementService } from '../procurement.service';
 import { getPoStatusMeta } from '../procurement.constants';
 import { poValue, poItemOutstanding, poReceiptProgress } from '../procurement.helpers';
+import {
+  BackIcon,
+  EditIcon,
+  DeleteIcon,
+  ReceiveIcon,
+  SuccessIcon,
+} from '../../../shared/components/icons';
 
 function Detail({ label, children }) {
   return (
@@ -76,7 +83,7 @@ export default function PurchaseOrderDetailPage() {
           title="Purchase order"
           actions={
             <Button to="/purchase-orders" variant="secondary">
-              ← Back to list
+              <BackIcon /> Back to list
             </Button>
           }
         />
@@ -105,13 +112,13 @@ export default function PurchaseOrderDetailPage() {
         actions={
           <>
             <Button to="/purchase-orders" variant="ghost">
-              ← Back
+              <BackIcon /> Back
             </Button>
             <Button to={`/purchase-orders/${order.id}/edit`} variant="secondary">
-              ✎ Edit
+              <EditIcon /> Edit
             </Button>
             <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting…' : '🗑 Delete'}
+              {deleting ? 'Deleting…' : (<><DeleteIcon /> Delete</>)}
             </Button>
           </>
         }
@@ -145,7 +152,7 @@ export default function PurchaseOrderDetailPage() {
           ) : null}
         </Card>
 
-        {flash ? <div className="banner">✅ {flash}</div> : null}
+        {flash ? <div className="banner"><SuccessIcon size={16} /> {flash}</div> : null}
 
         <Card title="Lines & receiving" bodyFlush>
           <div className="table-wrap">
@@ -211,12 +218,12 @@ export default function PurchaseOrderDetailPage() {
                 Confirming a receipt adds these quantities to raw-material inventory.
               </span>
               <Button variant="primary" onClick={handleReceive} disabled={receiving}>
-                {receiving ? 'Receiving…' : '📥 Confirm receipt'}
+                {receiving ? 'Receiving…' : (<><ReceiveIcon /> Confirm receipt</>)}
               </Button>
             </div>
           ) : (
             <div className="row" style={{ padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
-              <span className="text-success">✓ Fully received — all quantities are in inventory.</span>
+              <span className="text-success"><SuccessIcon size={16} /> Fully received — all quantities are in inventory.</span>
             </div>
           )}
         </Card>

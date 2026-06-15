@@ -1,3 +1,78 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* -------------------------------------------------------------------------
+   shadcn/ui theme (default "neutral" palette).
+   These tokens power the shadcn primitives only. We intentionally DO NOT add
+   shadcn's global base reset (`* { @apply border-border }` / `body { bg }`)
+   so the hand-written ERP design system below keeps full control of layout,
+   the dark sidebar, page backgrounds, and existing component classes.
+   `@theme inline` inlines these into the utilities, so the existing
+   radius/border tokens below are left untouched.
+   ------------------------------------------------------------------------- */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--shadcn-border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  :root {
+    --radius: 0.625rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    /* Align shadcn's primary with the ERP brand indigo (see --brand-600 below)
+       so primary buttons render in the brand color, not shadcn's near-black. */
+    --primary: var(--brand-600);
+    --primary-foreground: #ffffff;
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    --shadcn-border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+  }
+
+  /* shadcn primitives use bare `border`/`border-b` utilities, which default to
+     currentColor (dark) in Tailwind v4. Scope a light border color to shadcn
+     slots only (reusing the design system's --border) instead of shadcn's
+     global `*` reset, so the rest of the app keeps managing its own borders.
+     The `border-input`/`border-transparent` utilities on inputs/badges still
+     win (they live in the later @layer utilities). */
+  [data-slot] {
+    border-color: var(--border);
+  }
+}
+
 /* =========================================================================
    ERP design system — global tokens + base element + reusable component styles.
    Shared by every module. Tweak tokens here to re-skin the whole app.
@@ -38,7 +113,7 @@
 
   /* Sidebar (light) */
   --sidebar-bg: #ffffff;
-  --sidebar-text: var(--slate-700);
+  --sidebar-text: #334155;
   --sidebar-muted: var(--slate-500);
   --sidebar-border: var(--slate-200);
   --sidebar-active-bg: var(--slate-100);
@@ -107,11 +182,14 @@ h4 {
   line-height: 1.25;
 }
 
-a {
+/* Exclude anchors rendered as shadcn buttons (they carry data-slot="button"
+   via Button's `to` prop): they must keep their variant text color, not the
+   brand link color — otherwise an indigo label sits on the indigo button. */
+a:not([data-slot="button"]):not(.nav-item) {
   color: var(--brand-600);
   text-decoration: none;
 }
-a:hover {
+a:not([data-slot="button"]):not(.nav-item):hover {
   text-decoration: underline;
 }
 
@@ -147,19 +225,24 @@ a:hover {
 .app-shell.is-collapsed .sidebar__footer {
   display: none;
 }
-/* In the rail, hide the logo and keep just the centered toggle button. */
+/* In the rail, hide the logo and keep just the centered toggle button. With the
+   logo + brand text gone there's nothing to reserve header height for, so shrink
+   the brand band to just the toggle and drop the empty space above the nav. */
 .app-shell.is-collapsed .sidebar__logo {
   display: none;
 }
 .app-shell.is-collapsed .sidebar__brand {
   justify-content: center;
-  padding: 18px 0;
+  padding: 10px 0;
 }
 .app-shell.is-collapsed .sidebar__toggle {
   margin-left: 0;
 }
+/* Section labels are hidden in the rail, so drop the vertical padding that
+   reserved room for them — otherwise each group leaves a gap where its header
+   used to be. Item margins alone then space the icons evenly. */
 .app-shell.is-collapsed .sidebar__section {
-  padding: 16px 8px 4px;
+  padding: 0 8px;
 }
 .app-shell.is-collapsed .nav-item {
   justify-content: center;
@@ -412,7 +495,6 @@ a:hover {
 .content {
   padding: 28px;
   flex: 1;
-  max-width: 1200px;
   width: 100%;
 }
 
@@ -505,6 +587,30 @@ a:hover {
 }
 .btn-icon {
   padding: 6px 9px;
+}
+
+/* ---------- Icons (lucide-react) ---------------------------------------- */
+
+/* Inline glyphs sit nicely on the text baseline in flowing content (banners,
+   chips, hints). Ignored in flex contexts, where align-items handles it. */
+svg.lucide {
+  vertical-align: -0.18em;
+}
+/* Action buttons keep a compact, consistent glyph size. */
+.btn svg.lucide {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+/* Sidebar nav glyphs. */
+.nav-item__icon svg.lucide {
+  width: 18px;
+  height: 18px;
+}
+/* Large placeholder glyphs for empty / error / not-found states. */
+.state__icon svg.lucide {
+  width: 34px;
+  height: 34px;
 }
 
 /* ---------- Cards -------------------------------------------------------- */
@@ -923,6 +1029,33 @@ a:hover {
   border: 1px solid #bfdbfe;
 }
 
+/* ---------- Inventory: add-stock form ----------------------------------- */
+
+.stock-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--slate-50);
+}
+.stock-add .field {
+  flex: 1 1 140px;
+}
+.stock-add__actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+/* The add-item form mixes design-system inputs/selects (~38px tall) with shadcn
+   buttons (size="sm" = 32px). With the row bottom-aligned, the shorter buttons
+   dropped below the inputs — match them to the input height so the action row
+   lines up cleanly with the fields. */
+.stock-add__actions [data-slot='button'] {
+  height: 38px;
+}
+
 /* ---------- Tabs --------------------------------------------------------- */
 
 .tabs {
@@ -969,9 +1102,121 @@ a:hover {
   color: var(--brand-700);
 }
 
+/* ---------- Dashboard ---------------------------------------------------- */
+
+/* Rounded glyph chip shared by KPI cards and pipeline rows. */
+.dash-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--slate-100);
+  color: var(--slate-600);
+}
+.dash-icon svg.lucide {
+  width: 18px;
+  height: 18px;
+}
+.dash-icon--info { background: var(--info-bg); color: var(--info); }
+.dash-icon--success { background: var(--success-bg); color: var(--success); }
+.dash-icon--warning { background: var(--warning-bg); color: var(--warning); }
+.dash-icon--danger { background: var(--danger-bg); color: var(--danger); }
+
+/* Flush-card list (sales pipeline). */
+.dash-list {
+  display: flex;
+  flex-direction: column;
+}
+.dash-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.dash-row:last-child {
+  border-bottom: none;
+}
+.dash-row.is-clickable {
+  cursor: pointer;
+}
+.dash-row.is-clickable:hover {
+  background: var(--brand-50);
+}
+.dash-row__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.dash-row__text {
+  min-width: 0;
+}
+.dash-row__label {
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.dash-row__sub {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.dash-row__value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* ---------- Reports ------------------------------------------------------ */
+
+/* Two side-by-side breakdown cards (status / top-N), collapsing on mobile. */
+.report-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* Date-range + preset toolbar above the report tabs. */
+.report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+.report-filters__dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.report-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.report-filters__field .input {
+  width: 170px;
+}
+.report-filters__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 @media (max-width: 900px) {
   :root {
     --sidebar-w: 0px;
+  }
+  .report-cols {
+    grid-template-columns: 1fr;
   }
   /* On mobile, "collapsed" means the full drawer slides off-canvas — not the
      desktop icon rail. So the column closes to 0 and text labels stay visible. */

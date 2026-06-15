@@ -9,6 +9,14 @@ import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/
 import { useInquiry } from '../useInquiries';
 import { getStatusMeta } from '../inquiry.constants';
 import { inquiryService } from '../inquiry.service';
+import {
+  BackIcon,
+  AnalysisIcon,
+  QuotationIcon,
+  OrderIcon,
+  EditIcon,
+  DeleteIcon,
+} from '../../../shared/components/icons';
 
 function Detail({ label, children }) {
   return (
@@ -58,6 +66,27 @@ export default function InquiryDetailPage() {
     });
   }
 
+  function handleQuote() {
+    navigate('/quotations/new', {
+      state: {
+        prefill: {
+          sourceInquiryId: inquiry.id,
+          sourceInquiryNo: inquiry.inquiryNo,
+          customerName: inquiry.customerName,
+          customerContact: inquiry.customerContact || '',
+          items: inquiry.items.map((item) => ({
+            productName: item.productName,
+            productCode: item.productCode || '',
+            quantity: item.quantity,
+            unit: item.unit,
+            deliveryDate: item.targetDeliveryDate || '',
+            unitPrice: 0,
+          })),
+        },
+      },
+    });
+  }
+
   if (loading) {
     return <LoadingState label="Loading inquiry…" />;
   }
@@ -69,7 +98,7 @@ export default function InquiryDetailPage() {
           title="Inquiry"
           actions={
             <Button to="/inquiries" variant="secondary">
-              ← Back to list
+              <BackIcon /> Back to list
             </Button>
           }
         />
@@ -97,19 +126,22 @@ export default function InquiryDetailPage() {
         actions={
           <>
             <Button to="/inquiries" variant="ghost">
-              ← Back
+              <BackIcon /> Back
             </Button>
             <Button to={`/inquiries/${inquiry.id}/requirements`} variant="primary">
-              📊 Requirement analysis
+              <AnalysisIcon /> Requirement analysis
+            </Button>
+            <Button variant="secondary" onClick={handleQuote}>
+              <QuotationIcon /> Create quotation
             </Button>
             <Button variant="secondary" onClick={handleConvert}>
-              📦 Convert to order
+              <OrderIcon /> Convert to order
             </Button>
             <Button to={`/inquiries/${inquiry.id}/edit`} variant="secondary">
-              ✎ Edit
+              <EditIcon /> Edit
             </Button>
             <Button variant="danger" onClick={handleDelete} disabled={deleting}>
-              {deleting ? 'Deleting…' : '🗑 Delete'}
+              {deleting ? 'Deleting…' : (<><DeleteIcon /> Delete</>)}
             </Button>
           </>
         }

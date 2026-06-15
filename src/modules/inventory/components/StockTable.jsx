@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
 import { formatNumber } from '../../../shared/utils/format';
+import { CheckIcon } from '../../../shared/components/icons';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 
 /**
  * One editable stock row. Holds the in-progress value locally and commits on
@@ -27,17 +38,18 @@ function StockRow({ item, codeKey, onSave }) {
   }
 
   return (
-    <tr>
-      <td className="cell-mono">{item[codeKey]}</td>
-      <td className="cell-strong">{item.name}</td>
-      <td>{item.unit}</td>
-      <td className="num">
-        <div className="row" style={{ justifyContent: 'flex-end', gap: 8 }}>
-          {saving ? <span className="muted text-sm">saving…</span> : null}
-          {saved && !saving ? <span className="text-success text-sm">✓ saved</span> : null}
-          <input
-            className="input"
-            style={{ width: 120, textAlign: 'right' }}
+    <TableRow>
+      <TableCell className="font-mono text-xs">{item[codeKey]}</TableCell>
+      <TableCell className="font-medium">{item.name}</TableCell>
+      <TableCell>{item.unit}</TableCell>
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-2">
+          {saving ? <span className="text-muted-foreground text-sm">saving…</span> : null}
+          {saved && !saving ? (
+            <span className="text-green-600 text-sm"><CheckIcon size={13} /> saved</span>
+          ) : null}
+          <Input
+            className="w-28 text-right"
             type="number"
             min="0"
             step="any"
@@ -52,8 +64,8 @@ function StockRow({ item, codeKey, onSave }) {
             }}
           />
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -67,32 +79,30 @@ function StockRow({ item, codeKey, onSave }) {
  */
 export default function StockTable({ items, codeKey, codeLabel, onSave }) {
   return (
-    <div className="table-wrap">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>{codeLabel}</th>
-            <th>Name</th>
-            <th>Unit</th>
-            <th className="num">On hand</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <StockRow key={item.id} item={item} codeKey={codeKey} onSave={onSave} />
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={3} className="muted text-sm">
-              {items.length} item{items.length === 1 ? '' : 's'}
-            </td>
-            <td className="num muted text-sm">
-              {formatNumber(items.reduce((sum, item) => sum + (Number(item.onHand) || 0), 0))} total
-            </td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{codeLabel}</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Unit</TableHead>
+          <TableHead className="text-right">On hand</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((item) => (
+          <StockRow key={item.id} item={item} codeKey={codeKey} onSave={onSave} />
+        ))}
+      </TableBody>
+      <TableFooter>
+        <TableRow>
+          <TableCell colSpan={3} className="text-muted-foreground text-sm">
+            {items.length} item{items.length === 1 ? '' : 's'}
+          </TableCell>
+          <TableCell className="text-right text-muted-foreground text-sm">
+            {formatNumber(items.reduce((sum, item) => sum + (Number(item.onHand) || 0), 0))} total
+          </TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
   );
 }

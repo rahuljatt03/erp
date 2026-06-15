@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { bomService } from './bom.service';
+import { quotationService } from './quotation.service';
 
-export function useBoms() {
-  const [items, setItems] = useState([]);
+export function useQuotations() {
+  const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -10,9 +10,9 @@ export function useBoms() {
     setLoading(true);
     setError(null);
     try {
-      setItems(await bomService.list());
+      setQuotes(await quotationService.list());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bills of materials');
+      setError(err instanceof Error ? err.message : 'Failed to load quotations');
     } finally {
       setLoading(false);
     }
@@ -22,11 +22,11 @@ export function useBoms() {
     refresh();
   }, [refresh]);
 
-  return { items, loading, error, refresh };
+  return { quotes, loading, error, refresh };
 }
 
-export function useBom(id) {
-  const [bom, setBom] = useState(null);
+export function useQuotation(id) {
+  const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -35,11 +35,11 @@ export function useBom(id) {
     setLoading(true);
     setError(null);
     try {
-      const found = await bomService.get(id);
-      setBom(found);
-      if (!found) setError('Bill of materials not found');
+      const found = await quotationService.get(id);
+      setQuote(found);
+      if (!found) setError('Quotation not found');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bill of materials');
+      setError(err instanceof Error ? err.message : 'Failed to load quotation');
     } finally {
       setLoading(false);
     }
@@ -49,5 +49,5 @@ export function useBom(id) {
     refresh();
   }, [refresh]);
 
-  return { bom, loading, error, refresh };
+  return { quote, loading, error, refresh };
 }

@@ -4,6 +4,7 @@ import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
+import { AddIcon, OrderIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { useSalesOrders } from '../useSales';
 import { getSoStatusMeta } from '../sales.constants';
@@ -20,7 +21,7 @@ export default function SalesOrderListPage() {
         subtitle="Confirmed customer orders. Convert an inquiry, or create one directly."
         actions={
           <Button variant="primary" to="/sales-orders/new">
-            + New Sales Order
+            <AddIcon /> New Sales Order
           </Button>
         }
       />
@@ -32,12 +33,12 @@ export default function SalesOrderListPage() {
           <ErrorState text={error} onRetry={refresh} />
         ) : orders.length === 0 ? (
           <EmptyState
-            icon="📦"
+            icon={OrderIcon}
             title="No sales orders yet"
             text="Convert an accepted inquiry into a confirmed order, or create one directly."
             action={
               <Button variant="primary" to="/sales-orders/new">
-                + New Sales Order
+                <AddIcon /> New Sales Order
               </Button>
             }
           />
