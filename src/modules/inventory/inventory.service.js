@@ -1,41 +1,56 @@
-import { createCollection } from '../../shared/storage/mockDb';
-import { createId } from '../../shared/utils/id';
-import { seedFinishedGoods, seedRawMaterials } from './inventory.mock';
-
 /**
- * Inventory services — same async/Promise contract as the inquiry service, so
- * they swap to a real backend the same way (replace bodies with `fetch`).
+ * Inventory services — now talk to the .NET ERP API instead of localStorage.
+ *
+ * Same async/Promise contract as before (list/setOnHand/create/produce/receive/
+ * consume), so the hooks and components did not change.
+ *
+ * Set VITE_API_BASE_URL in a .env file to override the API origin.
  */
 
-const finishedCollection = createCollection('finished_goods', seedFinishedGoods);
-const rawCollection = createCollection('raw_materials', seedRawMaterials);
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080';
+const FG_ENDPOINT = `${API_BASE}/api/inventory/finished-goods`;
+const RM_ENDPOINT = `${API_BASE}/api/inventory/raw-materials`;
 
-function delay(ms = 200) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+/** Parse JSON if present; throw a helpful error on non-2xx responses. */
+async function handle(response) {
+  if (response.status === 204) return null;
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    const message = data?.title || data?.message || `Request failed (${response.status})`;
+    throw new Error(message);
+  }
+  return data;
+}
+
+function post(url, body) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
 }
 
 export const finishedGoodsService = {
   /** @returns {Promise<import('./inventory.types').FinishedGood[]>} */
   async list() {
-    await delay();
-    return finishedCollection.getAll();
+    return handle(await fetch(FG_ENDPOINT));
   },
+
   /** Set the on-hand quantity for one finished good. */
   async setOnHand(id, onHand) {
-    await delay(120);
-    return finishedCollection.update(id, { onHand: Number(onHand) || 0 });
+    return handle(
+      await fetch(`${FG_ENDPOINT}/${id}/on-hand`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ onHand: Number(onHand) || 0 }),
+      }),
+    );
   },
 
   /** Add a brand-new finished-good record to inventory. */
   async create({ sku, name, unit, onHand }) {
-    await delay(120);
-    return finishedCollection.insert({
-      id: createId('fg'),
-      sku: (sku ?? '').trim(),
-      name: (name ?? '').trim(),
-      unit: unit || 'pcs',
-      onHand: Number(onHand) || 0,
-    });
+    return handle(post(FG_ENDPOINT, { sku, name, unit, onHand: Number(onHand) || 0 }));
   },
 
   /**
@@ -43,88 +58,39 @@ export const finishedGoodsService = {
    * else creates the record. Called when a production order is completed.
    */
   async produce({ finishedGoodId, sku, name, unit, qty }) {
-    await delay(120);
-    const amount = Number(qty) || 0;
-
-    const byId = finishedGoodId ? finishedCollection.getById(finishedGoodId) : undefined;
-    if (byId) {
-      return finishedCollection.update(byId.id, { onHand: (Number(byId.onHand) || 0) + amount });
-    }
-
-    const targetSku = (sku ?? '').trim().toLowerCase();
-    const targetName = (name ?? '').trim().toLowerCase();
-    const match = finishedCollection
-      .getAll()
-      .find(
-        (good) =>
-          (targetSku && good.sku.trim().toLowerCase() === targetSku) ||
-          good.name.trim().toLowerCase() === targetName,
-      );
-    if (match) {
-      return finishedCollection.update(match.id, { onHand: (Number(match.onHand) || 0) + amount });
-    }
-
-    return finishedCollection.insert({
-      id: createId('fg'),
-      sku: sku || '',
-      name: name || 'Unknown product',
-      unit: unit || 'pcs',
-      onHand: amount,
-    });
+    return handle(post(`${FG_ENDPOINT}/produce`, { finishedGoodId, sku, name, unit, qty: Number(qty) || 0 }));
   },
 };
 
 export const rawMaterialsService = {
   /** @returns {Promise<import('./inventory.types').RawMaterialStock[]>} */
   async list() {
-    await delay();
-    return rawCollection.getAll();
+    return handle(await fetch(RM_ENDPOINT));
   },
+
   /** Set the on-hand quantity for one raw material. */
   async setOnHand(id, onHand) {
-    await delay(120);
-    return rawCollection.update(id, { onHand: Number(onHand) || 0 });
+    return handle(
+      await fetch(`${RM_ENDPOINT}/${id}/on-hand`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ onHand: Number(onHand) || 0 }),
+      }),
+    );
   },
 
   /** Add a brand-new raw-material record to inventory. */
   async create({ code, name, unit, onHand }) {
-    await delay(120);
-    return rawCollection.insert({
-      id: createId('rw'),
-      code: (code ?? '').trim(),
-      name: (name ?? '').trim(),
-      unit: unit || 'kg',
-      onHand: Number(onHand) || 0,
-    });
+    return handle(post(RM_ENDPOINT, { code, name, unit, onHand: Number(onHand) || 0 }));
   },
 
   /**
    * Add received stock. Increments the matched record (by id, then by name), or
-   * creates a new raw-material record if it isn't tracked yet. This is what the
-   * Procurement module calls when a purchase order is received.
+   * creates a new raw-material record if it isn't tracked yet. Called by the
+   * Procurement module when a purchase order is received.
    */
   async receive({ rawMaterialId, name, code, unit, qty }) {
-    await delay(120);
-    const amount = Number(qty) || 0;
-
-    const byId = rawMaterialId ? rawCollection.getById(rawMaterialId) : undefined;
-    if (byId) {
-      return rawCollection.update(byId.id, { onHand: (Number(byId.onHand) || 0) + amount });
-    }
-
-    const target = (name ?? '').trim().toLowerCase();
-    const byName = rawCollection.getAll().find((stock) => stock.name.trim().toLowerCase() === target);
-    if (byName) {
-      return rawCollection.update(byName.id, { onHand: (Number(byName.onHand) || 0) + amount });
-    }
-
-    return rawCollection.insert({
-      id: createId('rw'),
-      code: code || '',
-      name: name || 'Unknown material',
-      unit: unit || 'kg',
-      onHand: amount,
-    });
+    return handle(post(`${RM_ENDPOINT}/receive`, { rawMaterialId, name, code, unit, qty: Number(qty) || 0 }));
   },
 
   /**
@@ -132,20 +98,6 @@ export const rawMaterialsService = {
    * the material isn't tracked. Called when a production order is completed.
    */
   async consume({ rawMaterialId, name, qty }) {
-    await delay(120);
-    const amount = Number(qty) || 0;
-
-    const byId = rawMaterialId ? rawCollection.getById(rawMaterialId) : undefined;
-    if (byId) {
-      return rawCollection.update(byId.id, { onHand: Math.max(0, (Number(byId.onHand) || 0) - amount) });
-    }
-
-    const target = (name ?? '').trim().toLowerCase();
-    const byName = rawCollection.getAll().find((stock) => stock.name.trim().toLowerCase() === target);
-    if (byName) {
-      return rawCollection.update(byName.id, { onHand: Math.max(0, (Number(byName.onHand) || 0) - amount) });
-    }
-
-    return undefined;
+    return handle(post(`${RM_ENDPOINT}/consume`, { rawMaterialId, name, qty: Number(qty) || 0 }));
   },
 };

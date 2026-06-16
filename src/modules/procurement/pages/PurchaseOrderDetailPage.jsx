@@ -49,7 +49,9 @@ export default function PurchaseOrderDetailPage() {
 
   async function handleReceive() {
     const payload = Object.entries(receipts)
-      .map(([itemId, qty]) => ({ itemId, qty: Number(qty) || 0 }))
+      // Object keys are strings; item ids are numbers — coerce so the match in
+      // procurement.service.receive (it.id === receipt.itemId) succeeds.
+      .map(([itemId, qty]) => ({ itemId: Number(itemId), qty: Number(qty) || 0 }))
       .filter((r) => r.qty > 0);
     if (payload.length === 0) return;
     setReceiving(true);
