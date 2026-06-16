@@ -2,16 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import Badge from '../../../shared/components/Badge';
+import StatusSelect from '../../../shared/components/StatusSelect';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, InquiryIcon } from '../../../shared/components/icons';
 import { formatDate } from '../../../shared/utils/format';
 import { useInquiries } from '../useInquiries';
-import { getStatusMeta } from '../inquiry.constants';
+import { INQUIRY_STATUSES } from '../inquiry.constants';
 import { summariseProducts, countItems, earliestDelivery } from '../inquiry.helpers';
 
 export default function InquiryListPage() {
-  const { inquiries, loading, error, refresh } = useInquiries();
+  const { inquiries, loading, error, refresh, updateStatus, savingId } = useInquiries();
   const navigate = useNavigate();
 
   return (
@@ -58,7 +58,6 @@ export default function InquiryListPage() {
               </thead>
               <tbody>
                 {inquiries.map((inquiry) => {
-                  const status = getStatusMeta(inquiry.status);
                   const earliest = earliestDelivery(inquiry);
                   return (
                     <tr
@@ -72,8 +71,13 @@ export default function InquiryListPage() {
                       <td>{summariseProducts(inquiry)}</td>
                       <td className="num">{countItems(inquiry)}</td>
                       <td>{earliest ? formatDate(earliest) : '—'}</td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={inquiry.status}
+                          options={INQUIRY_STATUSES}
+                          disabled={savingId === inquiry.id}
+                          onChange={(next) => updateStatus(inquiry.id, next)}
+                        />
                       </td>
                     </tr>
                   );

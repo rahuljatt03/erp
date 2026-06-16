@@ -6,6 +6,8 @@ export function usePurchaseOrders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [savingId, setSavingId] = useState(null);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -18,11 +20,24 @@ export function usePurchaseOrders() {
     }
   }, []);
 
+  /** Optimistically reassign one purchase order's status, persisting via the service. */
+  const updateStatus = useCallback(async (id, status) => {
+    setSavingId(id);
+    setOrders((prev) => prev.map((it) => (it.id === id ? { ...it, status } : it)));
+    try {
+      await procurementService.setStatus(id, status);
+    } catch {
+      await refresh(); // revert to the source of truth on failure
+    } finally {
+      setSavingId(null);
+    }
+  }, [refresh]);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { orders, loading, error, refresh };
+  return { orders, loading, error, refresh, updateStatus, savingId };
 }
 
 export function usePurchaseOrder(id) {

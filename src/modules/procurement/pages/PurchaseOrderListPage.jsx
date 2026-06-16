@@ -2,16 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import Badge from '../../../shared/components/Badge';
+import StatusSelect from '../../../shared/components/StatusSelect';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, ProcurementIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { usePurchaseOrders } from '../useProcurement';
-import { getPoStatusMeta } from '../procurement.constants';
+import { PO_STATUSES } from '../procurement.constants';
 import { poValue } from '../procurement.helpers';
 
 export default function PurchaseOrderListPage() {
-  const { orders, loading, error, refresh } = usePurchaseOrders();
+  const { orders, loading, error, refresh, updateStatus, savingId } = usePurchaseOrders();
   const navigate = useNavigate();
 
   return (
@@ -57,7 +57,6 @@ export default function PurchaseOrderListPage() {
               </thead>
               <tbody>
                 {orders.map((po) => {
-                  const status = getPoStatusMeta(po.status);
                   return (
                     <tr
                       key={po.id}
@@ -69,8 +68,13 @@ export default function PurchaseOrderListPage() {
                       <td>{formatDate(po.orderDate)}</td>
                       <td className="num">{po.items.length}</td>
                       <td className="num">{formatNumber(poValue(po))}</td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={po.status}
+                          options={PO_STATUSES}
+                          disabled={savingId === po.id}
+                          onChange={(next) => updateStatus(po.id, next)}
+                        />
                       </td>
                     </tr>
                   );

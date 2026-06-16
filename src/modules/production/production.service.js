@@ -111,6 +111,12 @@ export const productionService = {
     collection.remove(id);
   },
 
+  /** Lightweight status override — used by the inline status changer on the list. */
+  async setStatus(id, status) {
+    await delay(120);
+    return collection.update(id, { status, updatedAt: nowIso() });
+  },
+
   /**
    * Report production of `qty` units (capped at the outstanding amount):
    *   • consumes each material proportionally (raw stock down)

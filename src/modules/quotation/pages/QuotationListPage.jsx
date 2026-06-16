@@ -2,18 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import Badge from '../../../shared/components/Badge';
+import StatusSelect from '../../../shared/components/StatusSelect';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, QuotationIcon } from '../../../shared/components/icons';
-import { formatDate, formatNumber, todayIso } from '../../../shared/utils/format';
+import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { useQuotations } from '../useQuotations';
-import { getQuoteStatusMeta } from '../quotation.constants';
-import { quoteValue, isQuoteExpired } from '../quotation.helpers';
+import { QUOTE_STATUSES } from '../quotation.constants';
+import { quoteValue } from '../quotation.helpers';
 
 export default function QuotationListPage() {
-  const { quotes, loading, error, refresh } = useQuotations();
+  const { quotes, loading, error, refresh, updateStatus, savingId } = useQuotations();
   const navigate = useNavigate();
-  const today = todayIso();
 
   return (
     <>
@@ -59,10 +58,6 @@ export default function QuotationListPage() {
               </thead>
               <tbody>
                 {quotes.map((quote) => {
-                  const expired = isQuoteExpired(quote, today);
-                  const status = expired
-                    ? getQuoteStatusMeta('expired')
-                    : getQuoteStatusMeta(quote.status);
                   return (
                     <tr
                       key={quote.id}
@@ -81,8 +76,13 @@ export default function QuotationListPage() {
                         )}
                       </td>
                       <td className="num">{formatNumber(quoteValue(quote))}</td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={quote.status}
+                          options={QUOTE_STATUSES}
+                          disabled={savingId === quote.id}
+                          onChange={(next) => updateStatus(quote.id, next)}
+                        />
                       </td>
                     </tr>
                   );

@@ -2,16 +2,16 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import Badge from '../../../shared/components/Badge';
+import StatusSelect from '../../../shared/components/StatusSelect';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, OrderIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { useSalesOrders } from '../useSales';
-import { getSoStatusMeta } from '../sales.constants';
+import { SO_STATUSES } from '../sales.constants';
 import { soValue } from '../sales.helpers';
 
 export default function SalesOrderListPage() {
-  const { orders, loading, error, refresh } = useSalesOrders();
+  const { orders, loading, error, refresh, updateStatus, savingId } = useSalesOrders();
   const navigate = useNavigate();
 
   return (
@@ -57,7 +57,6 @@ export default function SalesOrderListPage() {
               </thead>
               <tbody>
                 {orders.map((so) => {
-                  const status = getSoStatusMeta(so.status);
                   return (
                     <tr
                       key={so.id}
@@ -69,8 +68,13 @@ export default function SalesOrderListPage() {
                       <td>{formatDate(so.orderDate)}</td>
                       <td>{so.sourceInquiryNo ? <span className="cell-mono">{so.sourceInquiryNo}</span> : <span className="muted">Direct</span>}</td>
                       <td className="num">{formatNumber(soValue(so))}</td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={so.status}
+                          options={SO_STATUSES}
+                          disabled={savingId === so.id}
+                          onChange={(next) => updateStatus(so.id, next)}
+                        />
                       </td>
                     </tr>
                   );

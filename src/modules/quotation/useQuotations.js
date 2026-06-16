@@ -6,6 +6,8 @@ export function useQuotations() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [savingId, setSavingId] = useState(null);
+
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -18,11 +20,24 @@ export function useQuotations() {
     }
   }, []);
 
+  /** Optimistically reassign one quotation's status, persisting via the service. */
+  const updateStatus = useCallback(async (id, status) => {
+    setSavingId(id);
+    setQuotes((prev) => prev.map((it) => (it.id === id ? { ...it, status } : it)));
+    try {
+      await quotationService.setStatus(id, status);
+    } catch {
+      await refresh(); // revert to the source of truth on failure
+    } finally {
+      setSavingId(null);
+    }
+  }, [refresh]);
+
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { quotes, loading, error, refresh };
+  return { quotes, loading, error, refresh, updateStatus, savingId };
 }
 
 export function useQuotation(id) {

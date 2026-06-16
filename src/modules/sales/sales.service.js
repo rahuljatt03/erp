@@ -112,4 +112,10 @@ export const salesService = {
     await delay();
     collection.remove(id);
   },
+
+  /** Lightweight status override — used by the inline status changer on the list. */
+  async setStatus(id, status) {
+    await delay(120);
+    return collection.update(id, { status, updatedAt: nowIso() });
+  },
 };

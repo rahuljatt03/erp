@@ -117,6 +117,16 @@ export const procurementService = {
   },
 
   /**
+   * Lightweight status override — used by the inline status changer on the list.
+   * This is a manual override and intentionally bypasses `deriveStatus`; a later
+   * goods receipt will recompute the status from received quantities as usual.
+   */
+  async setStatus(id, status) {
+    await delay(120);
+    return collection.update(id, { status, updatedAt: nowIso() });
+  },
+
+  /**
    * Record a goods receipt. `receipts` is `[{ itemId, qty }]`. Increments each
    * line's receivedQty, pushes the quantity into raw-material inventory, and
    * recomputes the PO status.

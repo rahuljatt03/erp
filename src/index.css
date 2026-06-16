@@ -717,6 +717,45 @@ svg.lucide {
 .badge--success { color: var(--success); background: var(--success-bg); }
 .badge--danger  { color: var(--danger);  background: var(--danger-bg); }
 
+/* ---------- Inline status select (editable status pill in tables) -------- */
+
+.status-select {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 3px 26px 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 11px 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  transition: filter 0.12s, box-shadow 0.12s;
+}
+.status-select:hover {
+  filter: brightness(0.96);
+}
+.status-select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+.status-select:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+.status-select--neutral { color: var(--neutral); background-color: var(--neutral-bg); }
+.status-select--info    { color: var(--info);    background-color: var(--info-bg); }
+.status-select--warning { color: var(--warning); background-color: var(--warning-bg); }
+.status-select--success { color: var(--success); background-color: var(--success-bg); }
+.status-select--danger  { color: var(--danger);  background-color: var(--danger-bg); }
+
 /* ---------- Forms -------------------------------------------------------- */
 
 .field {

@@ -2,15 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
-import Badge from '../../../shared/components/Badge';
+import StatusSelect from '../../../shared/components/StatusSelect';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, ProductionIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
 import { useProductionOrders } from '../useProduction';
-import { getWoStatusMeta } from '../production.constants';
+import { WO_STATUSES } from '../production.constants';
 
 export default function ProductionOrderListPage() {
-  const { orders, loading, error, refresh } = useProductionOrders();
+  const { orders, loading, error, refresh, updateStatus, savingId } = useProductionOrders();
   const navigate = useNavigate();
 
   return (
@@ -56,7 +56,6 @@ export default function ProductionOrderListPage() {
               </thead>
               <tbody>
                 {orders.map((wo) => {
-                  const status = getWoStatusMeta(wo.status);
                   return (
                     <tr
                       key={wo.id}
@@ -73,8 +72,13 @@ export default function ProductionOrderListPage() {
                       </td>
                       <td className="num">{formatNumber(wo.producedQty)}</td>
                       <td>{wo.dueDate ? formatDate(wo.dueDate) : '—'}</td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={wo.status}
+                          options={WO_STATUSES}
+                          disabled={savingId === wo.id}
+                          onChange={(next) => updateStatus(wo.id, next)}
+                        />
                       </td>
                     </tr>
                   );
