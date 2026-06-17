@@ -191,7 +191,7 @@ export default function DashboardPage() {
               tone="info"
             />
             <Kpi
-              label="quotations"
+              label=" active quotations"
               value={m.quote.active}
               meta={`${formatNumber(m.quote.activeValue)} quoted value`}
               icon={QuotationIcon}
@@ -267,7 +267,7 @@ export default function DashboardPage() {
             title="Recent inquiries"
             actions={
               <Button to="/inquiries" variant="secondary" size="sm">
-                View all
+                View alls
               </Button>
             }
             bodyFlush
