@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/format';
-import { useInquiry } from '../useInquiries';
+import {
+  fetchInquiry,
+  removeInquiry,
+  selectInquiry,
+  selectInquiryError,
+  selectInquiryLoading,
+} from '../inquirySlice';
 import { getStatusMeta } from '../inquiry.constants';
-import { inquiryService } from '../inquiry.service';
 import {
   BackIcon,
   AnalysisIcon,
@@ -30,14 +36,23 @@ function Detail({ label, children }) {
 export default function InquiryDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { inquiry, loading, error, refresh } = useInquiry(id);
+  const dispatch = useDispatch();
+  const inquiry = useSelector(selectInquiry);
+  const loading = useSelector(selectInquiryLoading);
+  const error = useSelector(selectInquiryError);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchInquiry(id));
+  }, [dispatch, id]);
+
+  const refresh = () => dispatch(fetchInquiry(id));
 
   async function handleDelete() {
     if (!window.confirm(`Delete inquiry ${inquiry.inquiryNo}? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      await inquiryService.remove(inquiry.id);
+      await dispatch(removeInquiry(inquiry.id)).unwrap();
       navigate('/inquiries');
     } catch {
       setDeleting(false);

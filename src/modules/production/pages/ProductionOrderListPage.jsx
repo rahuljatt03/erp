@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
@@ -6,12 +8,26 @@ import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, ProductionIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
-import { useProductionOrders } from '../useProduction';
+import {
+  fetchProductionOrders,
+  selectProductionOrders,
+  selectProductionOrdersError,
+  selectProductionOrdersLoading,
+} from '../productionSlice';
 import { getWoStatusMeta } from '../production.constants';
 
 export default function ProductionOrderListPage() {
-  const { orders, loading, error, refresh } = useProductionOrders();
+  const dispatch = useDispatch();
+  const orders = useSelector(selectProductionOrders);
+  const loading = useSelector(selectProductionOrdersLoading);
+  const error = useSelector(selectProductionOrdersError);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchProductionOrders());
+  }, [dispatch]);
+
+  const refresh = () => dispatch(fetchProductionOrders());
 
   return (
     <>

@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
@@ -6,13 +8,27 @@ import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, OrderIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
-import { useSalesOrders } from '../useSales';
+import {
+  fetchSalesOrders,
+  selectSalesOrders,
+  selectSalesOrdersError,
+  selectSalesOrdersLoading,
+} from '../salesSlice';
 import { getSoStatusMeta } from '../sales.constants';
 import { soValue } from '../sales.helpers';
 
 export default function SalesOrderListPage() {
-  const { orders, loading, error, refresh } = useSalesOrders();
+  const dispatch = useDispatch();
+  const orders = useSelector(selectSalesOrders);
+  const loading = useSelector(selectSalesOrdersLoading);
+  const error = useSelector(selectSalesOrdersError);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchSalesOrders());
+  }, [dispatch]);
+
+  const refresh = () => dispatch(fetchSalesOrders());
 
   return (
     <>

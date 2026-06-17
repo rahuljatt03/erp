@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
-import { productionService } from '../production.service';
+import { createProductionOrder, fetchProductionOrder, updateProductionOrder } from '../productionSlice';
 import { WO_STATUSES, UNITS, blankWODraft, blankWOMaterial } from '../production.constants';
 import { AddIcon, RemoveIcon } from '../../../shared/components/icons';
 
@@ -23,6 +24,7 @@ export default function ProductionOrderFormPage() {
   const { id } = useParams();
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [draft, setDraft] = useState(blankWODraft);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -34,8 +36,8 @@ export default function ProductionOrderFormPage() {
     if (mode !== 'edit') return;
     let active = true;
     setLoading(true);
-    productionService
-      .get(id)
+    dispatch(fetchProductionOrder(id))
+      .unwrap()
       .then((found) => {
         if (!active) return;
         if (!found) setLoadError('Work order not found');
@@ -58,7 +60,7 @@ export default function ProductionOrderFormPage() {
     return () => {
       active = false;
     };
-  }, [mode, id]);
+  }, [mode, id, dispatch]);
 
   const setField = (key, value) => setDraft((prev) => ({ ...prev, [key]: value }));
   const setMaterial = (materialId, patch) =>
@@ -78,7 +80,9 @@ export default function ProductionOrderFormPage() {
     setSaving(true);
     try {
       const saved =
-        mode === 'edit' ? await productionService.update(id, draft) : await productionService.create(draft);
+        mode === 'edit'
+          ? await dispatch(updateProductionOrder({ id, draft })).unwrap()
+          : await dispatch(createProductionOrder(draft)).unwrap();
       navigate(`/production/${saved.id}`);
     } catch (err) {
       setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });

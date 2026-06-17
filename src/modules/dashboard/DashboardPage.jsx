@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../shared/components/PageHeader";
 import Button from "../../shared/components/Button";
 import Card from "../../shared/components/Card";
@@ -16,12 +17,39 @@ import {
   SuccessIcon,
 } from "../../shared/components/icons";
 import { formatDate, formatNumber, todayIso } from "../../shared/utils/format";
-import { useInquiries } from "../inquiry/useInquiries";
-import { useQuotations } from "../quotation/useQuotations";
-import { useSalesOrders } from "../sales/useSales";
-import { useProductionOrders } from "../production/useProduction";
-import { usePurchaseOrders } from "../procurement/useProcurement";
-import { useFinishedGoods, useRawMaterials } from "../inventory/useInventory";
+import {
+  fetchInquiries,
+  selectInquiries,
+  selectInquiriesLoading,
+} from "../inquiry/inquirySlice";
+import {
+  fetchQuotations,
+  selectQuotations,
+  selectQuotationsLoading,
+} from "../quotation/quotationSlice";
+import {
+  fetchSalesOrders,
+  selectSalesOrders,
+  selectSalesOrdersLoading,
+} from "../sales/salesSlice";
+import {
+  fetchProductionOrders,
+  selectProductionOrders,
+  selectProductionOrdersLoading,
+} from "../production/productionSlice";
+import {
+  fetchPurchaseOrders,
+  selectPurchaseOrders,
+  selectPurchaseOrdersLoading,
+} from "../procurement/procurementSlice";
+import {
+  fetchFinishedGoods,
+  fetchRawMaterials,
+  selectFinishedGoods,
+  selectFinishedGoodsLoading,
+  selectRawMaterials,
+  selectRawMaterialsLoading,
+} from "../inventory/inventorySlice";
 import { getStatusMeta } from "../inquiry/inquiry.constants";
 import { summariseProducts } from "../inquiry/inquiry.helpers";
 import {
@@ -84,13 +112,32 @@ function DashRow({ to, tone = "neutral", icon: Icon, label, sub, value }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { inquiries, loading: inqLoading } = useInquiries();
-  const { quotes, loading: quoteLoading } = useQuotations();
-  const { orders: salesOrders, loading: soLoading } = useSalesOrders();
-  const { orders: workOrders, loading: woLoading } = useProductionOrders();
-  const { orders: purchaseOrders, loading: poLoading } = usePurchaseOrders();
-  const { items: finishedGoods, loading: fgLoading } = useFinishedGoods();
-  const { items: rawMaterials, loading: rawLoading } = useRawMaterials();
+  const dispatch = useDispatch();
+  const inquiries = useSelector(selectInquiries);
+  const quotes = useSelector(selectQuotations);
+  const salesOrders = useSelector(selectSalesOrders);
+  const workOrders = useSelector(selectProductionOrders);
+  const purchaseOrders = useSelector(selectPurchaseOrders);
+  const finishedGoods = useSelector(selectFinishedGoods);
+  const rawMaterials = useSelector(selectRawMaterials);
+
+  const inqLoading = useSelector(selectInquiriesLoading);
+  const quoteLoading = useSelector(selectQuotationsLoading);
+  const soLoading = useSelector(selectSalesOrdersLoading);
+  const woLoading = useSelector(selectProductionOrdersLoading);
+  const poLoading = useSelector(selectPurchaseOrdersLoading);
+  const fgLoading = useSelector(selectFinishedGoodsLoading);
+  const rawLoading = useSelector(selectRawMaterialsLoading);
+
+  useEffect(() => {
+    dispatch(fetchInquiries());
+    dispatch(fetchQuotations());
+    dispatch(fetchSalesOrders());
+    dispatch(fetchProductionOrders());
+    dispatch(fetchPurchaseOrders());
+    dispatch(fetchFinishedGoods());
+    dispatch(fetchRawMaterials());
+  }, [dispatch]);
 
   const loading =
     inqLoading ||

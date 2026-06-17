@@ -56,8 +56,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// CORS must come BEFORE HttpsRedirection: otherwise the preflight OPTIONS request
+// can be answered with a 307 redirect, which browsers refuse to follow for CORS,
+// surfacing as a "blocked by CORS policy" error in the React app.
 app.UseCors(FrontendCors);
+app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

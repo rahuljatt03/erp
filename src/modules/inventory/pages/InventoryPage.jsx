@@ -1,18 +1,41 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Card from '../../../shared/components/Card';
 import Tabs from '../../../shared/components/Tabs';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
-import { useFinishedGoods, useRawMaterials } from '../useInventory';
-import { finishedGoodsService, rawMaterialsService } from '../inventory.service';
+import {
+  fetchFinishedGoods,
+  fetchRawMaterials,
+  createFinishedGood,
+  createRawMaterial,
+  setFinishedGoodOnHand,
+  setRawMaterialOnHand,
+  selectFinishedGoods,
+  selectFinishedGoodsLoading,
+  selectFinishedGoodsError,
+  selectRawMaterials,
+  selectRawMaterialsLoading,
+  selectRawMaterialsError,
+} from '../inventorySlice';
 import StockSection from '../components/StockSection';
 import { FinishedGoodsIcon, RawMaterialIcon } from '../../../shared/components/icons';
 
 export default function InventoryPage() {
-  const finished = useFinishedGoods();
-  const raw = useRawMaterials();
+  const dispatch = useDispatch();
+  const finishedItems = useSelector(selectFinishedGoods);
+  const rawItems = useSelector(selectRawMaterials);
+  const fgLoading = useSelector(selectFinishedGoodsLoading);
+  const rawLoading = useSelector(selectRawMaterialsLoading);
+  const fgError = useSelector(selectFinishedGoodsError);
+  const rawError = useSelector(selectRawMaterialsError);
+  const loading = fgLoading || rawLoading;
+  const error = fgError || rawError;
 
-  const loading = finished.loading || raw.loading;
-  const error = finished.error || raw.error;
+  useEffect(() => {
+    dispatch(fetchFinishedGoods());
+    dispatch(fetchRawMaterials());
+  }, [dispatch]);
 
   return (
     <>
@@ -28,8 +51,8 @@ export default function InventoryPage() {
           <ErrorState
             text={error}
             onRetry={() => {
-              finished.refresh();
-              raw.refresh();
+              dispatch(fetchFinishedGoods());
+              dispatch(fetchRawMaterials());
             }}
           />
         </Card>
@@ -40,18 +63,18 @@ export default function InventoryPage() {
               {
                 key: 'finished',
                 label: (<><FinishedGoodsIcon size={15} /> Finished goods</>),
-                badge: finished.items.length,
+                badge: finishedItems.length,
                 content: (
                   <StockSection
-                    items={finished.items}
+                    items={finishedItems}
                     codeKey="sku"
                     codeLabel="SKU"
                     itemLabel="finished good"
                     defaultUnit="pcs"
-                    onSave={(id, onHand) => finishedGoodsService.setOnHand(id, onHand)}
+                    onSave={(id, onHand) => dispatch(setFinishedGoodOnHand({ id, onHand })).unwrap()}
                     onAdd={async (draft) => {
-                      await finishedGoodsService.create(draft);
-                      await finished.refresh();
+                      await dispatch(createFinishedGood(draft)).unwrap();
+                      await dispatch(fetchFinishedGoods());
                     }}
                   />
                 ),
@@ -59,18 +82,18 @@ export default function InventoryPage() {
               {
                 key: 'raw',
                 label: (<><RawMaterialIcon size={15} /> Raw materials</>),
-                badge: raw.items.length,
+                badge: rawItems.length,
                 content: (
                   <StockSection
-                    items={raw.items}
+                    items={rawItems}
                     codeKey="code"
                     codeLabel="Code"
                     itemLabel="raw material"
                     defaultUnit="kg"
-                    onSave={(id, onHand) => rawMaterialsService.setOnHand(id, onHand)}
+                    onSave={(id, onHand) => dispatch(setRawMaterialOnHand({ id, onHand })).unwrap()}
                     onAdd={async (draft) => {
-                      await rawMaterialsService.create(draft);
-                      await raw.refresh();
+                      await dispatch(createRawMaterial(draft)).unwrap();
+                      await dispatch(fetchRawMaterials());
                     }}
                   />
                 ),

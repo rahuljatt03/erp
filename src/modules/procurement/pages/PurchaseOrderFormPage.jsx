@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createId } from '../../../shared/utils/id';
-import { procurementService } from '../procurement.service';
+import { createPurchaseOrder, fetchPurchaseOrder, updatePurchaseOrder } from '../procurementSlice';
 import {
   PO_STATUSES,
   UNITS,
@@ -62,6 +63,7 @@ export default function PurchaseOrderFormPage() {
   const { id } = useParams();
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const prefill = location.state?.prefill;
 
@@ -75,8 +77,8 @@ export default function PurchaseOrderFormPage() {
     if (mode !== 'edit') return;
     let active = true;
     setLoading(true);
-    procurementService
-      .get(id)
+    dispatch(fetchPurchaseOrder(id))
+      .unwrap()
       .then((found) => {
         if (!active) return;
         if (!found) setLoadError('Purchase order not found');
@@ -97,7 +99,7 @@ export default function PurchaseOrderFormPage() {
     return () => {
       active = false;
     };
-  }, [mode, id]);
+  }, [mode, id, dispatch]);
 
   const setField = (key, value) => setDraft((prev) => ({ ...prev, [key]: value }));
   const setItem = (itemId, patch) =>
@@ -119,8 +121,8 @@ export default function PurchaseOrderFormPage() {
     try {
       const saved =
         mode === 'edit'
-          ? await procurementService.update(id, draft)
-          : await procurementService.create(draft);
+          ? await dispatch(updatePurchaseOrder({ id, draft })).unwrap()
+          : await dispatch(createPurchaseOrder(draft)).unwrap();
       navigate(`/purchase-orders/${saved.id}`);
     } catch (err) {
       setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });

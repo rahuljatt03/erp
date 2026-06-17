@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
@@ -7,7 +8,7 @@ import Field from '../../../shared/components/Field';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createId } from '../../../shared/utils/id';
 import { formatNumber } from '../../../shared/utils/format';
-import { quotationService } from '../quotation.service';
+import { createQuotation, fetchQuotation, updateQuotation } from '../quotationSlice';
 import { QUOTE_STATUSES, UNITS, blankQuoteDraft, blankQuoteItem } from '../quotation.constants';
 import { quoteValue } from '../quotation.helpers';
 import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
@@ -52,6 +53,7 @@ export default function QuotationFormPage() {
   const { id } = useParams();
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const prefill = location.state?.prefill;
 
@@ -65,8 +67,8 @@ export default function QuotationFormPage() {
     if (mode !== 'edit') return;
     let active = true;
     setLoading(true);
-    quotationService
-      .get(id)
+    dispatch(fetchQuotation(id))
+      .unwrap()
       .then((found) => {
         if (!active) return;
         if (!found) setLoadError('Quotation not found');
@@ -87,7 +89,7 @@ export default function QuotationFormPage() {
     return () => {
       active = false;
     };
-  }, [mode, id]);
+  }, [mode, id, dispatch]);
 
   const setField = (key, value) => setDraft((prev) => ({ ...prev, [key]: value }));
   const setItem = (itemId, patch) =>
@@ -107,7 +109,9 @@ export default function QuotationFormPage() {
     setSaving(true);
     try {
       const saved =
-        mode === 'edit' ? await quotationService.update(id, draft) : await quotationService.create(draft);
+        mode === 'edit'
+          ? await dispatch(updateQuotation({ id, draft })).unwrap()
+          : await dispatch(createQuotation(draft)).unwrap();
       navigate(`/quotations/${saved.id}`);
     } catch (err) {
       setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });

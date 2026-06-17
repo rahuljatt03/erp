@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
@@ -6,13 +8,27 @@ import Badge from '../../../shared/components/Badge';
 import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
 import { AddIcon, ProcurementIcon } from '../../../shared/components/icons';
 import { formatDate, formatNumber } from '../../../shared/utils/format';
-import { usePurchaseOrders } from '../useProcurement';
+import {
+  fetchPurchaseOrders,
+  selectPurchaseOrders,
+  selectPurchaseOrdersError,
+  selectPurchaseOrdersLoading,
+} from '../procurementSlice';
 import { getPoStatusMeta } from '../procurement.constants';
 import { poValue } from '../procurement.helpers';
 
 export default function PurchaseOrderListPage() {
-  const { orders, loading, error, refresh } = usePurchaseOrders();
+  const dispatch = useDispatch();
+  const orders = useSelector(selectPurchaseOrders);
+  const loading = useSelector(selectPurchaseOrdersLoading);
+  const error = useSelector(selectPurchaseOrdersError);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchPurchaseOrders());
+  }, [dispatch]);
+
+  const refresh = () => dispatch(fetchPurchaseOrders());
 
   return (
     <>
