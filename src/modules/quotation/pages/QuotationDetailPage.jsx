@@ -23,6 +23,8 @@ import {
   EditIcon,
   DeleteIcon,
 } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm, confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
@@ -40,6 +42,7 @@ export default function QuotationDetailPage() {
   const quote = useSelector(selectQuotation);
   const loading = useSelector(selectQuotationLoading);
   const error = useSelector(selectQuotationError);
+  const toast = useToast();
   const [deleting, setDeleting] = useState(false);
   const [converting, setConverting] = useState(false);
 
@@ -50,18 +53,30 @@ export default function QuotationDetailPage() {
   const refresh = () => dispatch(fetchQuotation(id));
 
   async function handleDelete() {
-    if (!window.confirm(`Delete ${quote.quoteNo}? This cannot be undone.`)) return;
+    const ok = await confirmDelete(
+      `Delete ${quote.quoteNo}? This cannot be undone.`,
+      'Delete quotation?',
+    );
+    if (!ok) return;
     setDeleting(true);
     try {
       await dispatch(removeQuotation(quote.id)).unwrap();
+      toast.success('Quotation deleted', `${quote.quoteNo} was removed.`);
       navigate('/quotations');
-    } catch {
+    } catch (err) {
       setDeleting(false);
-      window.alert('Failed to delete quotation.');
+      toast.error('Delete failed', err instanceof Error ? err.message : 'Could not delete quotation.');
     }
   }
 
   async function handleConvert() {
+    const ok = await confirm({
+      message: `Convert ${quote.quoteNo} to a sales order? The quotation will be marked converted.`,
+      header: 'Convert to order?',
+      icon: 'pi pi-arrow-right',
+      acceptLabel: 'Convert',
+    });
+    if (!ok) return;
     setConverting(true);
     // Mark the quotation as converted before handing off; the sales order's own
     // create step takes care of marking the source inquiry "converted".
@@ -70,6 +85,7 @@ export default function QuotationDetailPage() {
     } catch {
       // Non-fatal — proceed to the order form regardless.
     }
+    toast.info('Sales order drafted', `From ${quote.quoteNo}. Review and save to confirm.`);
     navigate('/sales-orders/new', {
       state: {
         prefill: {

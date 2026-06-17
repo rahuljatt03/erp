@@ -24,10 +24,14 @@ public class RawMaterialsController : ControllerBase
         return Ok(await _service.GetAllAsync());
     }
 
-    /// <summary>POST /api/inventory/raw-materials — create a record.</summary>
+    /// <summary>POST /api/inventory/raw-materials — create a record (rejects a duplicate name).</summary>
     [HttpPost]
     public async Task<ActionResult<RawMaterialStock>> Create([FromBody] RawMaterialRequestDto draft)
     {
+        var name = (draft.Name ?? string.Empty).Trim();
+        if (await _service.NameExistsAsync(name))
+            return Conflict(new { message = $"A raw material named \"{name}\" already exists." });
+
         var created = await _service.CreateAsync(draft);
         return CreatedAtAction(nameof(GetAll), new { id = created.Id }, created);
     }
@@ -53,5 +57,13 @@ public class RawMaterialsController : ControllerBase
     {
         var result = await _service.ConsumeAsync(move);
         return result is null ? NoContent() : Ok(result);
+    }
+
+    /// <summary>DELETE /api/inventory/raw-materials/{id} — remove a record.</summary>
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var removed = await _service.DeleteAsync(id);
+        return removed ? NoContent() : NotFound();
     }
 }

@@ -24,6 +24,8 @@ import {
   ReceiveIcon,
   SuccessIcon,
 } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm, confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
@@ -42,10 +44,10 @@ export default function PurchaseOrderDetailPage() {
   const loading = useSelector(selectPurchaseOrderLoading);
   const error = useSelector(selectPurchaseOrderError);
 
+  const toast = useToast();
   const [receipts, setReceipts] = useState({});
   const [receiving, setReceiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [flash, setFlash] = useState(null);
 
   useEffect(() => {
     dispatch(fetchPurchaseOrder(id));
@@ -66,30 +68,47 @@ export default function PurchaseOrderDetailPage() {
   async function handleReceive() {
     const payload = Object.entries(receipts)
       // Object keys are strings; item ids are numbers — coerce so the match in
-      // procurement.service.receive (it.id === receipt.itemId) succeeds.
+      // receivePurchaseOrder (it.id === receipt.itemId) succeeds.
       .map(([itemId, qty]) => ({ itemId: Number(itemId), qty: Number(qty) || 0 }))
       .filter((r) => r.qty > 0);
-    if (payload.length === 0) return;
+    if (payload.length === 0) {
+      toast.warn('Nothing to receive', 'Enter a quantity on at least one line.');
+      return;
+    }
+    const totalQty = payload.reduce((sum, r) => sum + r.qty, 0);
+    const ok = await confirm({
+      message: `Receive ${formatNumber(totalQty)} unit(s) across ${payload.length} line(s)? This adds the quantities to raw-material inventory.`,
+      header: 'Confirm receipt?',
+      icon: 'pi pi-box',
+      acceptLabel: 'Receive',
+    });
+    if (!ok) return;
     setReceiving(true);
-    setFlash(null);
     try {
       await dispatch(receivePurchaseOrder({ id: order.id, receipts: payload })).unwrap();
       await dispatch(fetchPurchaseOrder(order.id));
-      setFlash('Stock received and added to inventory.');
+      toast.success('Stock received', 'Quantities added to raw-material inventory.');
+    } catch (err) {
+      toast.error('Receipt failed', err instanceof Error ? err.message : 'Could not record the receipt.');
     } finally {
       setReceiving(false);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Delete ${order.poNo}? This cannot be undone.`)) return;
+    const ok = await confirmDelete(
+      `Delete ${order.poNo}? This cannot be undone.`,
+      'Delete purchase order?',
+    );
+    if (!ok) return;
     setDeleting(true);
     try {
       await dispatch(removePurchaseOrder(order.id)).unwrap();
+      toast.success('Purchase order deleted', `${order.poNo} was removed.`);
       navigate('/purchase-orders');
-    } catch {
+    } catch (err) {
       setDeleting(false);
-      window.alert('Failed to delete purchase order.');
+      toast.error('Delete failed', err instanceof Error ? err.message : 'Could not delete purchase order.');
     }
   }
 
@@ -169,8 +188,6 @@ export default function PurchaseOrderDetailPage() {
             </>
           ) : null}
         </Card>
-
-        {flash ? <div className="banner"><SuccessIcon size={16} /> {flash}</div> : null}
 
         <Card title="Lines & receiving" bodyFlush>
           <div className="table-wrap">

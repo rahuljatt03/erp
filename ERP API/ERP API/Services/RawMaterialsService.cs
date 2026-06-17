@@ -45,6 +45,23 @@ public class RawMaterialsService : IRawMaterialsService
         return rm;
     }
 
+    public async Task<bool> NameExistsAsync(string name)
+    {
+        var target = (name ?? string.Empty).Trim().ToLower();
+        if (target.Length == 0) return false;
+        return await _db.RawMaterials.AnyAsync(r => r.Name.ToLower() == target);
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var rm = await _db.RawMaterials.FirstOrDefaultAsync(r => r.Id == id);
+        if (rm is null) return false;
+
+        _db.RawMaterials.Remove(rm);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<RawMaterialStock> ReceiveAsync(StockMovementRequest move)
     {
         var amount = move.Qty;

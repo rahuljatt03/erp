@@ -15,6 +15,8 @@ import {
   selectInquiryLoading,
 } from '../inquirySlice';
 import { getStatusMeta } from '../inquiry.constants';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirmDelete } from '../../../shared/feedback/confirm';
 import {
   BackIcon,
   AnalysisIcon,
@@ -40,6 +42,7 @@ export default function InquiryDetailPage() {
   const inquiry = useSelector(selectInquiry);
   const loading = useSelector(selectInquiryLoading);
   const error = useSelector(selectInquiryError);
+  const toast = useToast();
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -49,18 +52,24 @@ export default function InquiryDetailPage() {
   const refresh = () => dispatch(fetchInquiry(id));
 
   async function handleDelete() {
-    if (!window.confirm(`Delete inquiry ${inquiry.inquiryNo}? This cannot be undone.`)) return;
+    const ok = await confirmDelete(
+      `Delete inquiry ${inquiry.inquiryNo}? This cannot be undone.`,
+      'Delete inquiry?',
+    );
+    if (!ok) return;
     setDeleting(true);
     try {
       await dispatch(removeInquiry(inquiry.id)).unwrap();
+      toast.success('Inquiry deleted', `${inquiry.inquiryNo} was removed.`);
       navigate('/inquiries');
-    } catch {
+    } catch (err) {
       setDeleting(false);
-      window.alert('Failed to delete inquiry.');
+      toast.error('Delete failed', err instanceof Error ? err.message : 'Could not delete inquiry.');
     }
   }
 
   function handleConvert() {
+    toast.info('Sales order drafted', 'Review the prefilled lines and save to confirm.');
     navigate('/sales-orders/new', {
       state: {
         prefill: {
@@ -82,6 +91,7 @@ export default function InquiryDetailPage() {
   }
 
   function handleQuote() {
+    toast.info('Quotation drafted', 'Review the prefilled lines and save to confirm.');
     navigate('/quotations/new', {
       state: {
         prefill: {

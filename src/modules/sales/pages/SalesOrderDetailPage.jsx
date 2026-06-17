@@ -22,6 +22,8 @@ import {
   EditIcon,
   DeleteIcon,
 } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
@@ -39,6 +41,7 @@ export default function SalesOrderDetailPage() {
   const order = useSelector(selectSalesOrder);
   const loading = useSelector(selectSalesOrderLoading);
   const error = useSelector(selectSalesOrderError);
+  const toast = useToast();
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -48,14 +51,19 @@ export default function SalesOrderDetailPage() {
   const refresh = () => dispatch(fetchSalesOrder(id));
 
   async function handleDelete() {
-    if (!window.confirm(`Delete ${order.soNo}? This cannot be undone.`)) return;
+    const ok = await confirmDelete(
+      `Delete ${order.soNo}? This cannot be undone.`,
+      'Delete sales order?',
+    );
+    if (!ok) return;
     setDeleting(true);
     try {
       await dispatch(removeSalesOrder(order.id)).unwrap();
+      toast.success('Sales order deleted', `${order.soNo} was removed.`);
       navigate('/sales-orders');
-    } catch {
+    } catch (err) {
       setDeleting(false);
-      window.alert('Failed to delete sales order.');
+      toast.error('Delete failed', err instanceof Error ? err.message : 'Could not delete sales order.');
     }
   }
 

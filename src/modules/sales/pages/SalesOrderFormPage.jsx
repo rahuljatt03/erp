@@ -12,6 +12,8 @@ import { createSalesOrder, fetchSalesOrder, updateSalesOrder } from '../salesSli
 import { SO_STATUSES, UNITS, blankSODraft, blankSOItem } from '../sales.constants';
 import { soValue } from '../sales.helpers';
 import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm } from '../../../shared/feedback/confirm';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -53,6 +55,7 @@ export default function SalesOrderFormPage() {
   const dispatch = useDispatch();
   const location = useLocation();
   const prefill = location.state?.prefill;
+  const toast = useToast();
 
   const [draft, setDraft] = useState(() => initialDraft(mode === 'create' ? prefill : null));
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -103,15 +106,28 @@ export default function SalesOrderFormPage() {
     const result = validate(draft);
     setErrors(result.errors);
     if (result.hasErrors) return;
+    const ok = await confirm({
+      message: mode === 'edit' ? 'Save changes to this sales order?' : 'Create this sales order?',
+      header: mode === 'edit' ? 'Save changes?' : 'Create order?',
+      icon: 'pi pi-question-circle',
+      acceptLabel: mode === 'edit' ? 'Save' : 'Create',
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       const saved =
         mode === 'edit'
           ? await dispatch(updateSalesOrder({ id, draft })).unwrap()
           : await dispatch(createSalesOrder(draft)).unwrap();
+      toast.success(
+        mode === 'edit' ? 'Sales order updated' : 'Sales order created',
+        saved?.soNo ? `${saved.soNo} saved.` : undefined,
+      );
       navigate(`/sales-orders/${saved.id}`);
     } catch (err) {
-      setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      setErrors({ ...EMPTY_ERRORS, form: message });
+      toast.error('Save failed', message);
       setSaving(false);
     }
   }

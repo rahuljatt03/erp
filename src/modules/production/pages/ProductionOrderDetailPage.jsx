@@ -24,6 +24,8 @@ import {
   ProductionIcon,
   SuccessIcon,
 } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm, confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
@@ -42,10 +44,10 @@ export default function ProductionOrderDetailPage() {
   const loading = useSelector(selectProductionOrderLoading);
   const error = useSelector(selectProductionOrderError);
 
+  const toast = useToast();
   const [qty, setQty] = useState('0');
   const [producing, setProducing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [flash, setFlash] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProductionOrder(id));
@@ -61,26 +63,39 @@ export default function ProductionOrderDetailPage() {
   async function handleProduce() {
     const amount = Number(qty) || 0;
     if (amount <= 0) return;
+    const ok = await confirm({
+      message: `Report production of ${formatNumber(amount)} ${order.unit}? This consumes the listed materials and adds finished goods to inventory.`,
+      header: 'Report production?',
+      icon: 'pi pi-cog',
+      acceptLabel: 'Report',
+    });
+    if (!ok) return;
     setProducing(true);
-    setFlash(null);
     try {
       await dispatch(produceProductionOrder({ id: order.id, qty: amount })).unwrap();
       await dispatch(fetchProductionOrder(order.id));
-      setFlash('Production reported: materials consumed and finished goods added to inventory.');
+      toast.success('Production reported', 'Materials consumed and finished goods added to inventory.');
+    } catch (err) {
+      toast.error('Could not report production', err instanceof Error ? err.message : 'Please try again.');
     } finally {
       setProducing(false);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm(`Delete ${order.woNo}? This cannot be undone.`)) return;
+    const ok = await confirmDelete(
+      `Delete ${order.woNo}? This cannot be undone.`,
+      'Delete work order?',
+    );
+    if (!ok) return;
     setDeleting(true);
     try {
       await dispatch(removeProductionOrder(order.id)).unwrap();
+      toast.success('Work order deleted', `${order.woNo} was removed.`);
       navigate('/production');
-    } catch {
+    } catch (err) {
       setDeleting(false);
-      window.alert('Failed to delete work order.');
+      toast.error('Delete failed', err instanceof Error ? err.message : 'Could not delete work order.');
     }
   }
 
@@ -150,7 +165,13 @@ export default function ProductionOrderDetailPage() {
               {formatNumber(progress.outstanding)} {order.unit}
             </Detail>
             <Detail label="Due date">{order.dueDate ? formatDate(order.dueDate) : '—'}</Detail>
-            {order.sourceInquiryId ? (
+            {order.sourceSalesOrderId ? (
+              <Detail label="Source">
+                <Link to={`/sales-orders/${order.sourceSalesOrderId}`}>
+                  {order.sourceSalesOrderNo || 'Sales order'}
+                </Link>
+              </Detail>
+            ) : order.sourceInquiryId ? (
               <Detail label="Source">
                 <Link to={`/inquiries/${order.sourceInquiryId}/requirements`}>
                   {order.sourceInquiryNo || 'Requirement analysis'}
@@ -166,8 +187,6 @@ export default function ProductionOrderDetailPage() {
             </>
           ) : null}
         </Card>
-
-        {flash ? <div className="banner"><SuccessIcon size={16} /> {flash}</div> : null}
 
         <Card title="Materials consumed" bodyFlush>
           <div className="table-wrap">

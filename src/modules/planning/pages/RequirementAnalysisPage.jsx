@@ -17,6 +17,8 @@ import {
   ProductionIcon,
   SuccessIcon,
 } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm } from '../../../shared/feedback/confirm';
 
 const FINISHED_STATUS = {
   in_stock: { tone: 'success', label: 'In stock' },
@@ -33,6 +35,7 @@ export default function RequirementAnalysisPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const toast = useToast();
   const [creatingWOs, setCreatingWOs] = useState(false);
   const { inquiry, analysis, loading, error } = useRequirementAnalysis(id);
 
@@ -64,6 +67,13 @@ export default function RequirementAnalysisPage() {
   const buildLines = finishedGoods.filter((row) => row.toBuild > 0);
 
   const handleCreateWorkOrders = async () => {
+    const ok = await confirm({
+      message: `Create ${buildLines.length} production order${buildLines.length > 1 ? 's' : ''} from this build plan?`,
+      header: 'Create production orders?',
+      icon: 'pi pi-cog',
+      acceptLabel: 'Create',
+    });
+    if (!ok) return;
     setCreatingWOs(true);
     try {
       await Promise.all(
@@ -89,13 +99,19 @@ export default function RequirementAnalysisPage() {
           })).unwrap(),
         ),
       );
+      toast.success(
+        'Production orders created',
+        `${buildLines.length} work order${buildLines.length > 1 ? 's' : ''} created from ${inquiry.inquiryNo}.`,
+      );
       navigate('/production');
-    } finally {
+    } catch (err) {
+      toast.error('Could not create work orders', err instanceof Error ? err.message : 'Please try again.');
       setCreatingWOs(false);
     }
   };
 
   const handleCreatePO = () => {
+    toast.info('Purchase order drafted', `Prefilled from ${inquiry.inquiryNo}. Set the supplier and save.`);
     navigate('/purchase-orders/new', {
       state: {
         prefill: {

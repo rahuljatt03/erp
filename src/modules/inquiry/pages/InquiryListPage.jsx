@@ -81,6 +81,7 @@ export default function InquiryListPage() {
               <tbody>
                 {inquiries.map((inquiry) => {
                   const earliest = earliestDelivery(inquiry);
+                  const status = getStatusMeta(inquiry.status);
                   return (
                     <tr
                       key={inquiry.id}

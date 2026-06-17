@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../shared/components/PageHeader";
 import Button from "../../../shared/components/Button";
 import Card from "../../../shared/components/Card";
-import Badge from "../../../shared/components/Badge";
+import StatusSelect from "../../../shared/components/StatusSelect";
 import {
   LoadingState,
   EmptyState,
@@ -14,12 +14,15 @@ import { AddIcon, ProcurementIcon } from "../../../shared/components/icons";
 import { formatDate, formatNumber } from "../../../shared/utils/format";
 import {
   fetchPurchaseOrders,
+  updatePurchaseOrder,
   selectPurchaseOrders,
   selectPurchaseOrdersError,
   selectPurchaseOrdersLoading,
 } from "../procurementSlice";
-import { getPoStatusMeta } from "../procurement.constants";
+import { PO_STATUSES } from "../procurement.constants";
 import { poValue } from "../procurement.helpers";
+import { useToast } from "../../../shared/feedback/FeedbackProvider";
+import { confirm, statusNeedsConfirm } from "../../../shared/feedback/confirm";
 
 export default function PurchaseOrderListPage() {
   const dispatch = useDispatch();
@@ -27,12 +30,44 @@ export default function PurchaseOrderListPage() {
   const loading = useSelector(selectPurchaseOrdersLoading);
   const error = useSelector(selectPurchaseOrdersError);
   const navigate = useNavigate();
+  const toast = useToast();
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchPurchaseOrders());
   }, [dispatch]);
 
   const refresh = () => dispatch(fetchPurchaseOrders());
+
+  // Inline status change from the list. The API's PUT is a full replace, so send
+  // the whole order back with only the status swapped — preserving its line items
+  // (and their received quantities), supplier, and dates — then refresh the list.
+  async function updateStatus(id, status) {
+    const order = orders.find((po) => po.id === id);
+    if (!order) return;
+    const label = PO_STATUSES.find((s) => s.value === status)?.label ?? status;
+    if (statusNeedsConfirm(status)) {
+      const ok = await confirm({
+        message:
+          status === 'received'
+            ? `Mark ${order.poNo} as “${label}”? This fills every line to its ordered quantity and posts the balance to inventory.`
+            : `Mark ${order.poNo} as “${label}”?`,
+        header: 'Change status?',
+        acceptLabel: 'Change',
+      });
+      if (!ok) return;
+    }
+    setSavingId(id);
+    try {
+      await dispatch(updatePurchaseOrder({ id, draft: { ...order, status } })).unwrap();
+      await dispatch(fetchPurchaseOrders());
+      toast.success('Status updated', `${order.poNo} → ${label}.`);
+    } catch (err) {
+      toast.error('Update failed', err instanceof Error ? err.message : 'Could not update status.');
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   return (
     <>

@@ -3,6 +3,7 @@ using System;
 using ERP_API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ERP_API.Migrations
 {
     [DbContext(typeof(ErpDbContext))]
-    partial class ErpDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260617062525_AddPurchaseOrderItemPostedQty")]
+    partial class AddPurchaseOrderItemPostedQty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -164,9 +167,6 @@ namespace ERP_API.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
-                    b.Property<double>("PostedQty")
-                        .HasColumnType("double precision");
-
                     b.Property<double>("ProducedQty")
                         .HasColumnType("double precision");
 
@@ -184,12 +184,6 @@ namespace ERP_API.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("SourceInquiryNo")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("SourceSalesOrderId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SourceSalesOrderNo")
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -590,9 +584,6 @@ namespace ERP_API.Migrations
                     b.Property<string>("MaterialName")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<double>("PostedQty")
-                        .HasColumnType("double precision");
 
                     b.Property<int>("ProductionOrderId")
                         .HasColumnType("integer");

@@ -24,10 +24,14 @@ public class FinishedGoodsController : ControllerBase
         return Ok(await _service.GetAllAsync());
     }
 
-    /// <summary>POST /api/inventory/finished-goods — create a record.</summary>
+    /// <summary>POST /api/inventory/finished-goods — create a record (rejects a duplicate name).</summary>
     [HttpPost]
     public async Task<ActionResult<FinishedGood>> Create([FromBody] FinishedGoodRequest draft)
     {
+        var name = (draft.Name ?? string.Empty).Trim();
+        if (await _service.NameExistsAsync(name))
+            return Conflict(new { message = $"A finished good named \"{name}\" already exists." });
+
         var created = await _service.CreateAsync(draft);
         return CreatedAtAction(nameof(GetAll), new { id = created.Id }, created);
     }
@@ -45,5 +49,13 @@ public class FinishedGoodsController : ControllerBase
     public async Task<ActionResult<FinishedGood>> Produce([FromBody] StockMovementRequest move)
     {
         return Ok(await _service.ProduceAsync(move));
+    }
+
+    /// <summary>DELETE /api/inventory/finished-goods/{id} — remove a record.</summary>
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var removed = await _service.DeleteAsync(id);
+        return removed ? NoContent() : NotFound();
     }
 }

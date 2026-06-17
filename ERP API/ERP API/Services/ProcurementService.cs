@@ -53,7 +53,11 @@ public class ProcurementService : IProcurementService
             UpdatedAt = now,
         };
 
+        // Creating a PO already flagged "received" means the goods are in hand.
+        if (record.Status == "received") FillReceipts(record);
+
         _db.PurchaseOrders.Add(record);
+        await ApplyInventoryAsync(record);   // post received quantities into stock (once)
         await _db.SaveChangesAsync();
         return record;
     }
@@ -65,20 +69,25 @@ public class ProcurementService : IProcurementService
             .FirstOrDefaultAsync(p => p.Id == id);
         if (existing is null) return null;
 
-        var items = NormaliseItems(draft.Items);
+        // Reconcile the line items in place so each line keeps its server-owned
+        // ReceivedQty/PostedQty ledger (a wholesale replace would reset it and
+        // re-count the stock).
+        SyncItems(existing, draft.Items);
 
         existing.SupplierName = (draft.SupplierName ?? string.Empty).Trim();
         existing.SupplierContact = draft.SupplierContact?.Trim();
-        existing.Status = DeriveStatus(items, draft.Status);
         existing.OrderDate = draft.OrderDate;
         existing.ExpectedDate = draft.ExpectedDate;
         existing.Notes = draft.Notes?.Trim();
         existing.UpdatedAt = DateTime.UtcNow.ToString("o");
 
-        // Replace the line items wholesale (cascade delete removes the old rows).
-        _db.PurchaseOrderItems.RemoveRange(existing.Items);
-        existing.Items = items;
+        // Choosing "received" means the whole order has arrived: fill every line's
+        // receipt before deriving, so the status sticks and the stock gets posted.
+        var requested = string.IsNullOrWhiteSpace(draft.Status) ? existing.Status : draft.Status;
+        if (requested == "received") FillReceipts(existing);
+        existing.Status = DeriveStatus(existing.Items.ToList(), requested);
 
+        await ApplyInventoryAsync(existing);   // post the received delta into stock (once)
         await _db.SaveChangesAsync();
         return existing;
     }
@@ -114,6 +123,7 @@ public class ProcurementService : IProcurementService
         po.Status = DeriveStatus(po.Items.ToList(), fallback);
         po.UpdatedAt = DateTime.UtcNow.ToString("o");
 
+        await ApplyInventoryAsync(po);   // push the newly-received delta into stock (once)
         await _db.SaveChangesAsync();
         return po;
     }
@@ -153,6 +163,116 @@ public class ProcurementService : IProcurementService
         if (allReceived) return "received";
         if (anyReceived) return "partially_received";
         return fallback;
+    }
+
+    /// <summary>
+    /// Reconcile raw-material inventory with what the PO has received. For each
+    /// line we post only the (ReceivedQty - PostedQty) delta and then advance
+    /// PostedQty, so a quantity lands in stock exactly once across receipts, edits
+    /// and status changes. Downgrading or cancelling never claws stock back
+    /// (PostedQty stays put) — that would be a separate stock adjustment.
+    /// </summary>
+    private async Task ApplyInventoryAsync(PurchaseOrder po)
+    {
+        foreach (var item in po.Items)
+        {
+            var delta = item.ReceivedQty - item.PostedQty;
+            if (delta <= 0) continue;                 // already counted — never post twice
+            await AddReceivedToStockAsync(item, delta);
+            item.PostedQty = item.ReceivedQty;
+        }
+    }
+
+    /// <summary>Mark every line fully received — used when status is set to "received".</summary>
+    private static void FillReceipts(PurchaseOrder po)
+    {
+        foreach (var item in po.Items)
+            if (item.ReceivedQty < item.Quantity)
+                item.ReceivedQty = item.Quantity;
+    }
+
+    /// <summary>
+    /// Add <paramref name="qty"/> received units of a line into raw-material stock.
+    /// Matches by RawMaterialId, then by name (including records added earlier in
+    /// this same save), else creates a new record. Does not call SaveChanges — the
+    /// caller commits the PO and the stock together. Mirrors RawMaterialsService.
+    /// </summary>
+    private async Task AddReceivedToStockAsync(PurchaseOrderItem item, double qty)
+    {
+        var name = (item.MaterialName ?? string.Empty).Trim().ToLower();
+
+        RawMaterialStock? match = null;
+        if (item.RawMaterialId is int rid)
+            match = await _db.RawMaterials.FirstOrDefaultAsync(r => r.Id == rid);
+        match ??= _db.RawMaterials.Local.FirstOrDefault(r => r.Name.Trim().ToLower() == name);
+        match ??= await _db.RawMaterials.FirstOrDefaultAsync(r => r.Name.ToLower() == name);
+
+        if (match is not null)
+        {
+            match.OnHand += qty;
+            return;
+        }
+
+        _db.RawMaterials.Add(new RawMaterialStock
+        {
+            Code = item.MaterialCode ?? string.Empty,
+            Name = string.IsNullOrWhiteSpace(item.MaterialName) ? "Unknown material" : item.MaterialName,
+            Unit = string.IsNullOrWhiteSpace(item.Unit) ? "kg" : item.Unit,
+            OnHand = qty,
+        });
+    }
+
+    /// <summary>
+    /// Sync a PO's line items in place from the request. Lines matched by Id keep
+    /// their server-owned ReceivedQty/PostedQty and refresh their editable fields;
+    /// unmatched request rows are inserted; existing lines absent from the request
+    /// are removed. Replacing the rows wholesale would reset the received/posted
+    /// ledger and re-count stock, so we reconcile instead.
+    /// </summary>
+    private void SyncItems(PurchaseOrder existing, List<PurchaseOrderItemRequest>? incoming)
+    {
+        var rows = (incoming ?? new List<PurchaseOrderItemRequest>())
+            .Where(i => !string.IsNullOrWhiteSpace(i.MaterialName))
+            .ToList();
+
+        var keepIds = rows.Where(r => r.Id is > 0).Select(r => r.Id!.Value).ToHashSet();
+        foreach (var gone in existing.Items.Where(it => !keepIds.Contains(it.Id)).ToList())
+        {
+            existing.Items.Remove(gone);
+            _db.PurchaseOrderItems.Remove(gone);
+        }
+
+        foreach (var row in rows)
+        {
+            var match = row.Id is int rid && rid > 0
+                ? existing.Items.FirstOrDefault(it => it.Id == rid)
+                : null;
+
+            if (match is null)
+            {
+                existing.Items.Add(new PurchaseOrderItem
+                {
+                    MaterialName = row.MaterialName.Trim(),
+                    MaterialCode = row.MaterialCode?.Trim(),
+                    RawMaterialId = row.RawMaterialId,
+                    Quantity = row.Quantity,
+                    Unit = string.IsNullOrWhiteSpace(row.Unit) ? "kg" : row.Unit,
+                    UnitPrice = row.UnitPrice,
+                    ReceivedQty = row.ReceivedQty,
+                    // PostedQty defaults to 0 — a new line has posted nothing yet.
+                });
+            }
+            else
+            {
+                match.MaterialName = row.MaterialName.Trim();
+                match.MaterialCode = row.MaterialCode?.Trim();
+                match.RawMaterialId = row.RawMaterialId;
+                match.Quantity = row.Quantity;
+                match.Unit = string.IsNullOrWhiteSpace(row.Unit) ? "kg" : row.Unit;
+                match.UnitPrice = row.UnitPrice;
+                // ReceivedQty and PostedQty are server-owned — preserved across the update.
+            }
+        }
     }
 
     /// <summary>

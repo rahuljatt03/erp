@@ -39,6 +39,11 @@ export const createFinishedGood = createAsyncThunk(
   (draft) => finishedGoodsService.create(draft),
 );
 
+export const removeFinishedGood = createAsyncThunk(
+  'inventory/removeFinishedGood',
+  (id) => finishedGoodsService.remove(id),
+);
+
 export const setFinishedGoodOnHand = createAsyncThunk(
   'inventory/setFinishedGoodOnHand',
   ({ id, onHand }) => finishedGoodsService.setOnHand(id, onHand),
@@ -47,6 +52,11 @@ export const setFinishedGoodOnHand = createAsyncThunk(
 export const createRawMaterial = createAsyncThunk(
   'inventory/createRawMaterial',
   (draft) => rawMaterialsService.create(draft),
+);
+
+export const removeRawMaterial = createAsyncThunk(
+  'inventory/removeRawMaterial',
+  (id) => rawMaterialsService.remove(id),
 );
 
 export const setRawMaterialOnHand = createAsyncThunk(

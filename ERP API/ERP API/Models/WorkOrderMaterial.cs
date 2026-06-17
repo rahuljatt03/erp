@@ -12,6 +12,7 @@ public class WorkOrderMaterial
     public double Quantity { get; set; }                     // required for the full work-order qty
     public string Unit { get; set; } = "kg";
     public double ConsumedQty { get; set; }                  // cumulative consumed so far
+    public double PostedQty { get; set; }                    // consumedQty already deducted from raw stock (idempotency ledger)
 
     // Foreign key back to the parent work order — hidden from the API JSON.
     [JsonIgnore]

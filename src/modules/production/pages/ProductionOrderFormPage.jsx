@@ -9,6 +9,8 @@ import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createProductionOrder, fetchProductionOrder, updateProductionOrder } from '../productionSlice';
 import { WO_STATUSES, UNITS, blankWODraft, blankWOMaterial } from '../production.constants';
 import { AddIcon, RemoveIcon } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm } from '../../../shared/feedback/confirm';
 
 function validate(draft) {
   const errors = { fields: {}, form: null };
@@ -25,6 +27,7 @@ export default function ProductionOrderFormPage() {
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const toast = useToast();
 
   const [draft, setDraft] = useState(blankWODraft);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -77,15 +80,28 @@ export default function ProductionOrderFormPage() {
     const result = validate(draft);
     setErrors(result.errors);
     if (result.hasErrors) return;
+    const ok = await confirm({
+      message: mode === 'edit' ? 'Save changes to this work order?' : 'Create this work order?',
+      header: mode === 'edit' ? 'Save changes?' : 'Create work order?',
+      icon: 'pi pi-question-circle',
+      acceptLabel: mode === 'edit' ? 'Save' : 'Create',
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       const saved =
         mode === 'edit'
           ? await dispatch(updateProductionOrder({ id, draft })).unwrap()
           : await dispatch(createProductionOrder(draft)).unwrap();
+      toast.success(
+        mode === 'edit' ? 'Work order updated' : 'Work order created',
+        saved?.woNo ? `${saved.woNo} saved.` : undefined,
+      );
       navigate(`/production/${saved.id}`);
     } catch (err) {
-      setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      setErrors({ ...EMPTY_ERRORS, form: message });
+      toast.error('Save failed', message);
       setSaving(false);
     }
   }

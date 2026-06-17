@@ -17,9 +17,10 @@ public interface IProductionService
 
     /// <summary>
     /// Report production of qty units (capped at outstanding): advances
-    /// producedQty, each material's consumedQty proportionally, and the status.
-    /// Returns null if the work order doesn't exist. Inventory consume/produce is
-    /// orchestrated by the frontend, mirroring the existing architecture.
+    /// producedQty, each material's consumedQty proportionally, and the status, then
+    /// posts the inventory side effect — produced units added to finished-goods
+    /// stock, consumed materials deducted from raw stock (counted once via the
+    /// PostedQty ledgers). Returns null if the work order doesn't exist.
     /// </summary>
     Task<ProductionOrder?> ProduceAsync(int id, double qty);
 }

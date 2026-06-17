@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../shared/components/PageHeader";
 import Button from "../../../shared/components/Button";
@@ -71,11 +71,13 @@ export default function ProductionOrderListPage() {
                   <th className="num">To build</th>
                   <th className="num">Produced</th>
                   <th>Due date</th>
+                  <th>Source</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((wo) => {
+                  const status = getWoStatusMeta(wo.status);
                   return (
                     <tr
                       key={wo.id}
@@ -94,6 +96,25 @@ export default function ProductionOrderListPage() {
                       </td>
                       <td className="num">{formatNumber(wo.producedQty)}</td>
                       <td>{wo.dueDate ? formatDate(wo.dueDate) : "—"}</td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        {wo.sourceSalesOrderNo ? (
+                          <Link
+                            to={`/sales-orders/${wo.sourceSalesOrderId}`}
+                            className="cell-mono"
+                          >
+                            {wo.sourceSalesOrderNo}
+                          </Link>
+                        ) : wo.sourceInquiryNo ? (
+                          <Link
+                            to={`/inquiries/${wo.sourceInquiryId}/requirements`}
+                            className="cell-mono"
+                          >
+                            {wo.sourceInquiryNo}
+                          </Link>
+                        ) : (
+                          <span className="muted">Direct</span>
+                        )}
+                      </td>
                       <td>
                         <Badge tone={status.tone}>{status.label}</Badge>
                       </td>

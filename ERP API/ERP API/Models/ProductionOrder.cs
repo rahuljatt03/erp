@@ -14,10 +14,13 @@ public class ProductionOrder
     public double Quantity { get; set; }
     public string Unit { get; set; } = "pcs";
     public double ProducedQty { get; set; }
+    public double PostedQty { get; set; }                    // producedQty already added to finished-goods stock (idempotency ledger)
     public string Status { get; set; } = "planned";          // planned|in_progress|completed|cancelled
     public string? DueDate { get; set; }                     // yyyy-mm-dd
     public int? SourceInquiryId { get; set; }
     public string? SourceInquiryNo { get; set; }
+    public int? SourceSalesOrderId { get; set; }             // set when released from a sales order entering "in_production"
+    public string? SourceSalesOrderNo { get; set; }
     public string? Notes { get; set; }
     public List<WorkOrderMaterial> Materials { get; set; } = new();
     public string CreatedBy { get; set; } = default!;

@@ -7,9 +7,13 @@ using Microsoft.EntityFrameworkCore;
 namespace ERP_API.Services;
 
 /// <summary>
-/// EF Core-backed implementation of <see cref="IProductionService"/>. Mirrors the
-/// frontend production.service.js: sequential work-order numbers (WO-2026-NNNN),
-/// material normalisation, and the produce() loop-closer math.
+/// EF Core-backed implementation of <see cref="IProductionService"/>. Owns the
+/// production → inventory side effect: completing a work order adds the produced
+/// units to finished-goods stock and deducts the consumed materials from raw
+/// stock. Mirrors <see cref="ProcurementService"/>'s idempotent ledger approach —
+/// each ProductionOrder.PostedQty / WorkOrderMaterial.PostedQty records what has
+/// already hit inventory, so a quantity lands in (or out of) stock exactly once
+/// across produce calls, edits and status changes.
 /// </summary>
 public class ProductionService : IProductionService
 {
@@ -49,6 +53,8 @@ public class ProductionService : IProductionService
             DueDate = draft.DueDate,
             SourceInquiryId = draft.SourceInquiryId,
             SourceInquiryNo = draft.SourceInquiryNo,
+            SourceSalesOrderId = draft.SourceSalesOrderId,
+            SourceSalesOrderNo = draft.SourceSalesOrderNo,
             Notes = draft.Notes?.Trim(),
             Materials = NormaliseMaterials(draft.Materials),
             CreatedBy = "Operations User",
@@ -56,7 +62,11 @@ public class ProductionService : IProductionService
             UpdatedAt = now,
         };
 
+        // Creating a work order already flagged "completed" means it is fully built.
+        if (record.Status == "completed") FillProduction(record);
+
         _db.ProductionOrders.Add(record);
+        await ApplyInventoryAsync(record);   // finished goods up, raw materials down (once)
         await _db.SaveChangesAsync();
         return record;
     }
@@ -68,19 +78,27 @@ public class ProductionService : IProductionService
             .FirstOrDefaultAsync(p => p.Id == id);
         if (existing is null) return null;
 
+        // Reconcile materials in place so each line keeps its server-owned
+        // ConsumedQty/PostedQty ledger (a wholesale replace would reset it and
+        // re-consume the stock).
+        SyncItems(existing, draft.Materials);
+
         existing.ProductName = (draft.ProductName ?? string.Empty).Trim();
         existing.ProductCode = draft.ProductCode?.Trim();
         existing.Quantity = draft.Quantity;
         existing.Unit = string.IsNullOrWhiteSpace(draft.Unit) ? "pcs" : draft.Unit;
-        existing.Status = string.IsNullOrWhiteSpace(draft.Status) ? existing.Status : draft.Status;
         existing.DueDate = draft.DueDate;
         existing.Notes = draft.Notes?.Trim();
         existing.UpdatedAt = DateTime.UtcNow.ToString("o");
 
-        // Replace materials wholesale (cascade delete removes the old rows).
-        _db.WorkOrderMaterials.RemoveRange(existing.Materials);
-        existing.Materials = NormaliseMaterials(draft.Materials);
+        // Choosing "completed" means the run is fully built: fill produced + each
+        // material's consumed before deriving, so the status sticks and the stock
+        // gets posted.
+        var requested = string.IsNullOrWhiteSpace(draft.Status) ? existing.Status : draft.Status;
+        if (requested == "completed") FillProduction(existing);
+        existing.Status = DeriveStatus(existing, requested);
 
+        await ApplyInventoryAsync(existing);   // post the produced/consumed delta into stock (once)
         await _db.SaveChangesAsync();
         return existing;
     }
@@ -119,6 +137,7 @@ public class ProductionService : IProductionService
         wo.Status = wo.ProducedQty >= quantity ? "completed" : "in_progress";
         wo.UpdatedAt = DateTime.UtcNow.ToString("o");
 
+        await ApplyInventoryAsync(wo);   // finished goods up, raw materials down (once)
         await _db.SaveChangesAsync();
         return wo;
     }
@@ -144,12 +163,168 @@ public class ProductionService : IProductionService
         return $"{prefix}{(maxSeq + 1):D4}";
     }
 
-    /// <summary>Round to 3 decimal places, matching the frontend round() helper.</summary>
-    private static double Round(double value) => Math.Round(value * 1000) / 1000;
+    /// <summary>
+    /// Derive status from produced quantity (unless cancelled/planned, which the
+    /// caller can force). Fully produced ⇒ completed; partially ⇒ in_progress.
+    /// </summary>
+    private static string DeriveStatus(ProductionOrder wo, string? fallback)
+    {
+        fallback ??= "planned";
+        if (fallback is "cancelled" or "planned") return fallback;
+
+        var allBuilt = wo.Quantity > 0 && wo.ProducedQty >= wo.Quantity;
+        if (allBuilt) return "completed";
+        if (wo.ProducedQty > 0) return "in_progress";
+        return fallback;
+    }
+
+    /// <summary>
+    /// Mark the work order fully built — used when status is set to "completed":
+    /// produced reaches the full quantity and every material is fully consumed.
+    /// </summary>
+    private static void FillProduction(ProductionOrder wo)
+    {
+        if (wo.ProducedQty < wo.Quantity) wo.ProducedQty = wo.Quantity;
+        foreach (var material in wo.Materials)
+            if (material.ConsumedQty < material.Quantity)
+                material.ConsumedQty = material.Quantity;
+    }
+
+    /// <summary>
+    /// Reconcile inventory with what the work order has produced/consumed. Finished
+    /// goods get the (ProducedQty - PostedQty) delta added; each material's raw
+    /// stock gets its (ConsumedQty - PostedQty) delta deducted. PostedQty then
+    /// advances so a quantity moves stock exactly once across produce calls, edits
+    /// and status changes. Reversals (downgrading/cancelling) never claw stock back
+    /// (ledgers stay put) — that would be a separate stock adjustment. Does not call
+    /// SaveChanges — the caller commits the work order and the stock together.
+    /// </summary>
+    private async Task ApplyInventoryAsync(ProductionOrder wo)
+    {
+        var producedDelta = wo.ProducedQty - wo.PostedQty;
+        if (producedDelta > 0)
+        {
+            await AddProducedToStockAsync(wo, producedDelta);
+            wo.PostedQty = wo.ProducedQty;
+        }
+
+        foreach (var material in wo.Materials)
+        {
+            var consumedDelta = material.ConsumedQty - material.PostedQty;
+            if (consumedDelta <= 0) continue;             // already counted — never post twice
+            await ConsumeFromStockAsync(material, consumedDelta);
+            material.PostedQty = material.ConsumedQty;
+        }
+    }
+
+    /// <summary>
+    /// Add <paramref name="qty"/> produced units into finished-goods stock. Matches
+    /// by FinishedGoodId, then SKU/name (including records added earlier in this same
+    /// save), else creates a new record. Mirrors FinishedGoodsService.ProduceAsync.
+    /// </summary>
+    private async Task AddProducedToStockAsync(ProductionOrder wo, double qty)
+    {
+        var sku = (wo.ProductCode ?? string.Empty).Trim().ToLower();
+        var name = (wo.ProductName ?? string.Empty).Trim().ToLower();
+
+        FinishedGood? match = null;
+        if (wo.FinishedGoodId is int id)
+            match = await _db.FinishedGoods.FirstOrDefaultAsync(f => f.Id == id);
+        match ??= _db.FinishedGoods.Local.FirstOrDefault(f =>
+            (sku != "" && f.Sku.Trim().ToLower() == sku) || f.Name.Trim().ToLower() == name);
+        match ??= await _db.FinishedGoods.FirstOrDefaultAsync(f =>
+            (sku != "" && f.Sku.ToLower() == sku) || f.Name.ToLower() == name);
+
+        if (match is not null)
+        {
+            match.OnHand += qty;
+            return;
+        }
+
+        _db.FinishedGoods.Add(new FinishedGood
+        {
+            Sku = wo.ProductCode ?? string.Empty,
+            Name = string.IsNullOrWhiteSpace(wo.ProductName) ? "Unknown product" : wo.ProductName,
+            Unit = string.IsNullOrWhiteSpace(wo.Unit) ? "pcs" : wo.Unit,
+            OnHand = qty,
+        });
+    }
+
+    /// <summary>
+    /// Deduct <paramref name="qty"/> consumed units of a material from raw stock
+    /// (floored at zero). Matches by RawMaterialId, then name (including records
+    /// touched earlier in this same save). No-op for an untracked material.
+    /// Mirrors RawMaterialsService.ConsumeAsync.
+    /// </summary>
+    private async Task ConsumeFromStockAsync(WorkOrderMaterial material, double qty)
+    {
+        var name = (material.MaterialName ?? string.Empty).Trim().ToLower();
+
+        RawMaterialStock? match = null;
+        if (material.RawMaterialId is int rid)
+            match = await _db.RawMaterials.FirstOrDefaultAsync(r => r.Id == rid);
+        match ??= _db.RawMaterials.Local.FirstOrDefault(r => r.Name.Trim().ToLower() == name);
+        match ??= await _db.RawMaterials.FirstOrDefaultAsync(r => r.Name.ToLower() == name);
+
+        if (match is null) return;   // untracked material — nothing to deduct
+
+        match.OnHand = Math.Max(0, match.OnHand - qty);
+    }
+
+    /// <summary>
+    /// Sync a work order's materials in place from the request. Lines matched by Id
+    /// keep their server-owned ConsumedQty/PostedQty and refresh their editable
+    /// fields; unmatched request rows are inserted; existing lines absent from the
+    /// request are removed. Replacing the rows wholesale would reset the
+    /// consumed/posted ledger and re-consume stock, so we reconcile instead.
+    /// </summary>
+    private void SyncItems(ProductionOrder existing, List<WorkOrderMaterialRequest>? incoming)
+    {
+        var rows = (incoming ?? new List<WorkOrderMaterialRequest>())
+            .Where(m => !string.IsNullOrWhiteSpace(m.MaterialName))
+            .ToList();
+
+        var keepIds = rows.Where(r => r.Id is > 0).Select(r => r.Id!.Value).ToHashSet();
+        foreach (var gone in existing.Materials.Where(m => !keepIds.Contains(m.Id)).ToList())
+        {
+            existing.Materials.Remove(gone);
+            _db.WorkOrderMaterials.Remove(gone);
+        }
+
+        foreach (var row in rows)
+        {
+            var match = row.Id is int rid && rid > 0
+                ? existing.Materials.FirstOrDefault(m => m.Id == rid)
+                : null;
+
+            if (match is null)
+            {
+                existing.Materials.Add(new WorkOrderMaterial
+                {
+                    MaterialName = row.MaterialName.Trim(),
+                    MaterialCode = row.MaterialCode?.Trim(),
+                    RawMaterialId = row.RawMaterialId,
+                    Quantity = row.Quantity,
+                    Unit = string.IsNullOrWhiteSpace(row.Unit) ? "kg" : row.Unit,
+                    // ConsumedQty/PostedQty default to 0 — a new line has consumed nothing yet.
+                });
+            }
+            else
+            {
+                match.MaterialName = row.MaterialName.Trim();
+                match.MaterialCode = row.MaterialCode?.Trim();
+                match.RawMaterialId = row.RawMaterialId;
+                match.Quantity = row.Quantity;
+                match.Unit = string.IsNullOrWhiteSpace(row.Unit) ? "kg" : row.Unit;
+                // ConsumedQty and PostedQty are server-owned — preserved across the update.
+            }
+        }
+    }
 
     /// <summary>
     /// Maps incoming request rows into entities: strings trimmed, empty rows
-    /// dropped. Ids are left unset so the database auto-generates them.
+    /// dropped. Ids are left unset so the database auto-generates them. Used on
+    /// create; updates reconcile in place via <see cref="SyncItems"/>.
     /// </summary>
     private static List<WorkOrderMaterial> NormaliseMaterials(List<WorkOrderMaterialRequest>? materials)
     {
@@ -167,4 +342,7 @@ public class ProductionService : IProductionService
             })
             .ToList();
     }
+
+    /// <summary>Round to 3 decimal places, matching the frontend round() helper.</summary>
+    private static double Round(double value) => Math.Round(value * 1000) / 1000;
 }

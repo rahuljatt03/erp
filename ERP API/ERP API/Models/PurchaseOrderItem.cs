@@ -14,6 +14,12 @@ public class PurchaseOrderItem
     public double UnitPrice { get; set; }
     public double ReceivedQty { get; set; }                  // cumulative received so far
 
+    // Idempotency ledger: how much of this line has already been pushed into
+    // raw-material inventory. The procurement service only ever posts the
+    // (ReceivedQty - PostedQty) delta, so a line is counted into stock exactly
+    // once no matter how many times its status is re-saved or toggled.
+    public double PostedQty { get; set; }
+
     // Foreign key back to the parent purchase order — hidden from the API JSON.
     [JsonIgnore]
     public int PurchaseOrderId { get; set; }

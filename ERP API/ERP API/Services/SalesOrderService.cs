@@ -10,12 +10,19 @@ namespace ERP_API.Services;
 /// EF Core-backed implementation of <see cref="ISalesOrderService"/>. Mirrors the
 /// frontend sales.service.js: sequential order numbers (SO-2026-NNNN), item
 /// normalisation, created/updated timestamps. New orders default to "confirmed".
+/// Owns one cross-module side effect: when an order enters "in_production" it is
+/// released to production — one work order per line (see ReleaseToProductionAsync).
 /// </summary>
 public class SalesOrderService : ISalesOrderService
 {
     private readonly ErpDbContext _db;
+    private readonly IProductionService _production;
 
-    public SalesOrderService(ErpDbContext db) => _db = db;
+    public SalesOrderService(ErpDbContext db, IProductionService production)
+    {
+        _db = db;
+        _production = production;
+    }
 
     public async Task<List<SalesOrder>> GetAllAsync()
     {
@@ -55,6 +62,7 @@ public class SalesOrderService : ISalesOrderService
 
         _db.SalesOrders.Add(record);
         await _db.SaveChangesAsync();
+        await ReleaseToProductionAsync(record);   // create work orders if created "in_production"
         return record;
     }
 
@@ -80,6 +88,7 @@ public class SalesOrderService : ISalesOrderService
         existing.Items = NormaliseItems(draft.Items);
 
         await _db.SaveChangesAsync();
+        await ReleaseToProductionAsync(existing);   // create work orders if now "in_production"
         return existing;
     }
 
@@ -95,13 +104,54 @@ public class SalesOrderService : ISalesOrderService
 
     public async Task<SalesOrder?> SetStatusAsync(int id, string status)
     {
-        var existing = await _db.SalesOrders.FirstOrDefaultAsync(s => s.Id == id);
+        // Include the lines so a transition to "in_production" can release them.
+        var existing = await _db.SalesOrders
+            .Include(s => s.Items)
+            .FirstOrDefaultAsync(s => s.Id == id);
         if (existing is null) return null;
 
         existing.Status = status;
         existing.UpdatedAt = DateTime.UtcNow.ToString("o");
         await _db.SaveChangesAsync();
+        await ReleaseToProductionAsync(existing);   // create work orders if now "in_production"
         return existing;
+    }
+
+    /// <summary>
+    /// Release a sales order to production: create one planned work order per line,
+    /// each linked back to the order via SourceSalesOrderId, so they appear on the
+    /// Production page. Only acts when the order is "in_production", and is
+    /// idempotent — if any work order already references this order (e.g. the status
+    /// was toggled away and back) nothing new is created. Work orders carry no
+    /// materials: a sales order has no bill of materials, so the planner adds them by
+    /// editing the work order (or generates material-aware ones from the inquiry's
+    /// requirement analysis). Reuses <see cref="IProductionService.CreateAsync"/> for
+    /// work-order numbering; the shared scoped DbContext commits each one.
+    /// </summary>
+    private async Task ReleaseToProductionAsync(SalesOrder so)
+    {
+        if (so.Status != "in_production") return;
+
+        var alreadyReleased = await _db.ProductionOrders
+            .AnyAsync(p => p.SourceSalesOrderId == so.Id);
+        if (alreadyReleased) return;
+
+        foreach (var line in so.Items)
+        {
+            await _production.CreateAsync(new ProductionOrderRequest
+            {
+                ProductName = line.ProductName,
+                ProductCode = line.ProductCode,
+                Quantity = line.Quantity,
+                Unit = line.Unit,
+                Status = "planned",
+                DueDate = string.IsNullOrWhiteSpace(line.DeliveryDate) ? so.ExpectedDeliveryDate : line.DeliveryDate,
+                SourceSalesOrderId = so.Id,
+                SourceSalesOrderNo = so.SoNo,
+                Notes = $"Released from sales order {so.SoNo}.",
+                Materials = new List<WorkOrderMaterialRequest>(),
+            });
+        }
     }
 
     /// <summary>Generates the next sequential order number, e.g. SO-2026-0004.</summary>

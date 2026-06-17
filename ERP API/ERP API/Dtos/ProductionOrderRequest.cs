@@ -15,6 +15,8 @@ public class ProductionOrderRequest
     public string? DueDate { get; set; }
     public int? SourceInquiryId { get; set; }
     public string? SourceInquiryNo { get; set; }
+    public int? SourceSalesOrderId { get; set; }
+    public string? SourceSalesOrderNo { get; set; }
     public string? Notes { get; set; }
     public List<WorkOrderMaterialRequest> Materials { get; set; } = new();
 }

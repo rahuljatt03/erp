@@ -53,6 +53,11 @@ export const finishedGoodsService = {
     return handle(post(FG_ENDPOINT, { sku, name, unit, onHand: Number(onHand) || 0 }));
   },
 
+  /** Delete a finished-good record by id. */
+  async remove(id) {
+    return handle(await fetch(`${FG_ENDPOINT}/${id}`, { method: 'DELETE' }));
+  },
+
   /**
    * Add produced units to finished-goods stock. Matches by id, then SKU/name,
    * else creates the record. Called when a production order is completed.
@@ -82,6 +87,11 @@ export const rawMaterialsService = {
   /** Add a brand-new raw-material record to inventory. */
   async create({ code, name, unit, onHand }) {
     return handle(post(RM_ENDPOINT, { code, name, unit, onHand: Number(onHand) || 0 }));
+  },
+
+  /** Delete a raw-material record by id. */
+  async remove(id) {
+    return handle(await fetch(`${RM_ENDPOINT}/${id}`, { method: 'DELETE' }));
   },
 
   /**

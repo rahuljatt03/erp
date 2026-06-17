@@ -10,6 +10,12 @@ public interface IRawMaterialsService
     Task<RawMaterialStock> CreateAsync(RawMaterialRequestDto draft);
     Task<RawMaterialStock?> SetOnHandAsync(int id, double onHand);
 
+    /// <summary>True if a raw material with this name already exists (case-insensitive).</summary>
+    Task<bool> NameExistsAsync(string name);
+
+    /// <summary>Delete a raw-material record. Returns false if no record had that id.</summary>
+    Task<bool> DeleteAsync(int id);
+
     /// <summary>Add received stock (match by id, then name, else create).</summary>
     Task<RawMaterialStock> ReceiveAsync(StockMovementRequest move);
 

@@ -45,6 +45,23 @@ public class FinishedGoodsService : IFinishedGoodsService
         return fg;
     }
 
+    public async Task<bool> NameExistsAsync(string name)
+    {
+        var target = (name ?? string.Empty).Trim().ToLower();
+        if (target.Length == 0) return false;
+        return await _db.FinishedGoods.AnyAsync(f => f.Name.ToLower() == target);
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var fg = await _db.FinishedGoods.FirstOrDefaultAsync(f => f.Id == id);
+        if (fg is null) return false;
+
+        _db.FinishedGoods.Remove(fg);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<FinishedGood> ProduceAsync(StockMovementRequest move)
     {
         var amount = move.Qty;

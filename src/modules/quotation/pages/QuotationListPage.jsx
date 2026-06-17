@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../shared/components/PageHeader";
 import Button from "../../../shared/components/Button";
 import Card from "../../../shared/components/Card";
-import Badge from "../../../shared/components/Badge";
+import StatusSelect from "../../../shared/components/StatusSelect";
 import {
   LoadingState,
   EmptyState,
@@ -18,12 +18,15 @@ import {
 } from "../../../shared/utils/format";
 import {
   fetchQuotations,
+  updateQuotation,
   selectQuotations,
   selectQuotationsError,
   selectQuotationsLoading,
 } from "../quotationSlice";
-import { getQuoteStatusMeta } from "../quotation.constants";
+import { QUOTE_STATUSES } from "../quotation.constants";
 import { quoteValue, isQuoteExpired } from "../quotation.helpers";
+import { useToast } from "../../../shared/feedback/FeedbackProvider";
+import { confirm, statusNeedsConfirm } from "../../../shared/feedback/confirm";
 
 export default function QuotationListPage() {
   const dispatch = useDispatch();
@@ -32,12 +35,41 @@ export default function QuotationListPage() {
   const error = useSelector(selectQuotationsError);
   const navigate = useNavigate();
   const today = todayIso();
+  const toast = useToast();
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchQuotations());
   }, [dispatch]);
 
   const refresh = () => dispatch(fetchQuotations());
+
+  // Inline status change from the list. The API's PUT is a full replace, so send
+  // the whole quotation back with only the status swapped — preserving its line
+  // items, customer, and dates — then refresh the list.
+  async function updateStatus(id, status) {
+    const quote = quotes.find((q) => q.id === id);
+    if (!quote) return;
+    const label = QUOTE_STATUSES.find((s) => s.value === status)?.label ?? status;
+    if (statusNeedsConfirm(status)) {
+      const ok = await confirm({
+        message: `Mark ${quote.quoteNo} as “${label}”?`,
+        header: 'Change status?',
+        acceptLabel: 'Change',
+      });
+      if (!ok) return;
+    }
+    setSavingId(id);
+    try {
+      await dispatch(updateQuotation({ id, draft: { ...quote, status } })).unwrap();
+      await dispatch(fetchQuotations());
+      toast.success('Status updated', `${quote.quoteNo} → ${label}.`);
+    } catch (err) {
+      toast.error('Update failed', err instanceof Error ? err.message : 'Could not update status.');
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   return (
     <>

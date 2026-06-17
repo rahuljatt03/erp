@@ -1070,29 +1070,26 @@ svg.lucide {
 
 /* ---------- Inventory: add-stock form ----------------------------------- */
 
-.stock-add {
+/* Inventory "add item" popup — a PrimeReact <Dialog> wrapping the add form.
+   It inherits the shared .p-dialog chrome (header/footer) themed further down;
+   these rules just size the dialog and stack the fields as a vertical form. */
+.stock-dialog {
+  width: 30rem;
+  max-width: calc(100vw - 40px);
+}
+.stock-dialog .p-dialog-content {
+  padding: 6px 22px 20px;
+  background: var(--surface);
+}
+.stock-add-modal {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--slate-50);
+  flex-direction: column;
+  gap: 15px;
 }
-.stock-add .field {
-  flex: 1 1 140px;
-}
-.stock-add__actions {
-  display: flex;
-  gap: 8px;
-  flex: 0 0 auto;
-}
-/* The add-item form mixes design-system inputs/selects (~38px tall) with shadcn
-   buttons (size="sm" = 32px). With the row bottom-aligned, the shorter buttons
-   dropped below the inputs — match them to the input height so the action row
-   lines up cleanly with the fields. */
-.stock-add__actions [data-slot='button'] {
-  height: 38px;
+.stock-add-modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
 }
 
 /* ---------- Tabs --------------------------------------------------------- */
@@ -1248,6 +1245,257 @@ svg.lucide {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* =========================================================================
+   PrimeReact Toast — restyled to the ERP design system.
+   Mirrors the .banner look: Inter font, app radius/shadow, a soft tinted
+   background with a tone-coloured border, and the icon + summary in the tone.
+   index.css loads after PrimeReact's theme (see main.jsx), so these win.
+   ========================================================================= */
+.p-toast {
+  font-family: var(--sans);
+  width: 22rem;
+  max-width: calc(100vw - 40px);
+}
+
+.p-toast .p-toast-message {
+  margin-bottom: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+/* Drop Lara's 6px left accent and match the .banner padding/rhythm. */
+.p-toast .p-toast-message .p-toast-message-content {
+  border-width: 0;
+  padding: 12px 14px;
+  gap: 11px;
+  align-items: flex-start;
+}
+
+.p-toast .p-toast-message-icon,
+.p-toast .p-toast-message-icon .pi {
+  font-size: 0.95rem;
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.p-toast .p-toast-message-icon {
+  margin-top: 2px;
+}
+
+.p-toast .p-toast-message-text {
+  margin-left: 0;
+  line-height: 1.45;
+}
+
+.p-toast .p-toast-summary {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-strong);
+}
+
+.p-toast .p-toast-detail {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.p-toast .p-toast-icon-close {
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, color 0.15s;
+}
+.p-toast .p-toast-icon-close:enabled:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-strong);
+}
+.p-toast .p-toast-icon-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* ---- Per-severity tones: tinted surface + tone border + tone text ------ */
+.p-toast .p-toast-message.p-toast-message-success {
+  background: var(--success-bg);
+  border-color: #bbf7d0;
+}
+.p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-success .p-toast-summary {
+  color: #166534;
+}
+.p-toast .p-toast-message.p-toast-message-success .p-toast-detail {
+  color: #15803d;
+}
+
+.p-toast .p-toast-message.p-toast-message-info {
+  background: var(--info-bg);
+  border-color: #bfdbfe;
+}
+.p-toast .p-toast-message.p-toast-message-info .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-info .p-toast-summary {
+  color: #1e40af;
+}
+.p-toast .p-toast-message.p-toast-message-info .p-toast-detail {
+  color: #1d4ed8;
+}
+
+.p-toast .p-toast-message.p-toast-message-warn {
+  background: var(--warning-bg);
+  border-color: #fde68a;
+}
+.p-toast .p-toast-message.p-toast-message-warn .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-warn .p-toast-summary {
+  color: #92400e;
+}
+.p-toast .p-toast-message.p-toast-message-warn .p-toast-detail {
+  color: #b45309;
+}
+
+.p-toast .p-toast-message.p-toast-message-error {
+  background: var(--danger-bg);
+  border-color: #fecaca;
+}
+.p-toast .p-toast-message.p-toast-message-error .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-error .p-toast-summary {
+  color: #991b1b;
+}
+.p-toast .p-toast-message.p-toast-message-error .p-toast-detail {
+  color: #b91c1c;
+}
+
+/* =========================================================================
+   PrimeReact ConfirmDialog — restyled to the ERP design system.
+   The default footer renders as cramped, chrome-less text buttons; these
+   self-contained rules turn them into proper app buttons (neutral Cancel +
+   brand Confirm, red for destructive) and give the dialog app spacing.
+   index.css loads after PrimeReact's theme (see main.jsx), so these win.
+   ========================================================================= */
+.p-confirm-dialog {
+  width: 30rem;
+  max-width: calc(100vw - 40px);
+}
+
+.p-dialog {
+  font-family: var(--sans);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.p-dialog .p-dialog-header {
+  padding: 20px 22px 10px;
+  background: var(--surface);
+  border-bottom: 0;
+}
+.p-dialog .p-dialog-header .p-dialog-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+.p-dialog .p-dialog-header-icons .p-dialog-header-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.15s, color 0.15s;
+}
+.p-dialog .p-dialog-header-icons .p-dialog-header-icon:enabled:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text-strong);
+}
+
+.p-confirm-dialog .p-dialog-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 6px 22px 22px;
+  background: var(--surface);
+  color: var(--text);
+}
+.p-confirm-dialog .p-confirm-dialog-icon {
+  font-size: 1.4rem;
+  margin-top: 1px;
+  color: var(--text-muted);
+}
+.p-confirm-dialog .p-confirm-dialog-message {
+  margin-left: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* Footer: right-aligned, evenly spaced — fixes the cramped/clipped default. */
+.p-dialog .p-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 4px 22px 20px;
+  background: var(--surface);
+}
+
+/* Self-contained button base = the neutral "Cancel" action. */
+.p-confirm-dialog .p-dialog-footer .p-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto;
+  min-width: 92px;
+  margin: 0;
+  padding: 9px 16px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.p-confirm-dialog .p-dialog-footer .p-button .p-button-label {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+.p-confirm-dialog .p-dialog-footer .p-button:enabled:hover {
+  background: var(--slate-50);
+  border-color: var(--slate-400);
+  color: var(--text-strong);
+}
+.p-confirm-dialog .p-dialog-footer .p-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+
+/* Accept = brand primary. */
+.p-confirm-dialog .p-dialog-footer .p-button.p-confirm-dialog-accept {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  color: #fff;
+}
+.p-confirm-dialog .p-dialog-footer .p-button.p-confirm-dialog-accept:enabled:hover {
+  background: var(--brand-700);
+  border-color: var(--brand-700);
+  color: #fff;
+}
+
+/* Destructive accept (confirmDelete sets acceptClassName="p-button-danger"). */
+.p-confirm-dialog .p-dialog-footer .p-button.p-confirm-dialog-accept.p-button-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.p-confirm-dialog .p-dialog-footer .p-button.p-confirm-dialog-accept.p-button-danger:enabled:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
 }
 
 @media (max-width: 900px) {

@@ -12,6 +12,8 @@ import { createQuotation, fetchQuotation, updateQuotation } from '../quotationSl
 import { QUOTE_STATUSES, UNITS, blankQuoteDraft, blankQuoteItem } from '../quotation.constants';
 import { quoteValue } from '../quotation.helpers';
 import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm } from '../../../shared/feedback/confirm';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -56,6 +58,7 @@ export default function QuotationFormPage() {
   const dispatch = useDispatch();
   const location = useLocation();
   const prefill = location.state?.prefill;
+  const toast = useToast();
 
   const [draft, setDraft] = useState(() => initialDraft(mode === 'create' ? prefill : null));
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -106,15 +109,28 @@ export default function QuotationFormPage() {
     const result = validate(draft);
     setErrors(result.errors);
     if (result.hasErrors) return;
+    const ok = await confirm({
+      message: mode === 'edit' ? 'Save changes to this quotation?' : 'Create this quotation?',
+      header: mode === 'edit' ? 'Save changes?' : 'Create quotation?',
+      icon: 'pi pi-question-circle',
+      acceptLabel: mode === 'edit' ? 'Save' : 'Create',
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       const saved =
         mode === 'edit'
           ? await dispatch(updateQuotation({ id, draft })).unwrap()
           : await dispatch(createQuotation(draft)).unwrap();
+      toast.success(
+        mode === 'edit' ? 'Quotation updated' : 'Quotation created',
+        saved?.quoteNo ? `${saved.quoteNo} saved.` : undefined,
+      );
       navigate(`/quotations/${saved.id}`);
     } catch (err) {
-      setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });
+      const message = err instanceof Error ? err.message : 'Failed to save';
+      setErrors({ ...EMPTY_ERRORS, form: message });
+      toast.error('Save failed', message);
       setSaving(false);
     }
   }

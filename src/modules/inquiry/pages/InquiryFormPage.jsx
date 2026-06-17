@@ -15,6 +15,8 @@ import {
 } from '../inquiry.constants';
 import LineItemEditor from '../components/LineItemEditor';
 import { AddIcon } from '../../../shared/components/icons';
+import { useToast } from '../../../shared/feedback/FeedbackProvider';
+import { confirm } from '../../../shared/feedback/confirm';
 
 /** Validates a draft and returns `{ errors, hasErrors }`. */
 function validate(draft) {
@@ -47,6 +49,7 @@ export default function InquiryFormPage() {
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const toast = useToast();
 
   const [draft, setDraft] = useState(blankInquiryDraft);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -104,18 +107,29 @@ export default function InquiryFormPage() {
     setErrors(result.errors);
     if (result.hasErrors) return;
 
+    const ok = await confirm({
+      message: mode === 'edit' ? 'Save changes to this inquiry?' : 'Create this inquiry?',
+      header: mode === 'edit' ? 'Save changes?' : 'Create inquiry?',
+      icon: 'pi pi-question-circle',
+      acceptLabel: mode === 'edit' ? 'Save' : 'Create',
+    });
+    if (!ok) return;
+
     setSaving(true);
     try {
       const saved =
         mode === 'edit'
           ? await dispatch(updateInquiry({ id, draft })).unwrap()
           : await dispatch(createInquiry(draft)).unwrap();
+      toast.success(
+        mode === 'edit' ? 'Inquiry updated' : 'Inquiry created',
+        saved?.inquiryNo ? `${saved.inquiryNo} saved.` : undefined,
+      );
       navigate(`/inquiries/${saved.id}`);
     } catch (err) {
-      setErrors({
-        ...EMPTY_ERRORS,
-        form: err instanceof Error ? err.message : 'Failed to save inquiry',
-      });
+      const message = err instanceof Error ? err.message : 'Failed to save inquiry';
+      setErrors({ ...EMPTY_ERRORS, form: message });
+      toast.error('Save failed', message);
       setSaving(false);
     }
   }
