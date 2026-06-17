@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/format';
-import { useSalesOrder } from '../useSales';
-import { salesService } from '../sales.service';
+import {
+  fetchSalesOrder,
+  removeSalesOrder,
+  selectSalesOrder,
+  selectSalesOrderError,
+  selectSalesOrderLoading,
+} from '../salesSlice';
 import { getSoStatusMeta } from '../sales.constants';
 import { soValue } from '../sales.helpers';
 import {
@@ -29,14 +35,23 @@ function Detail({ label, children }) {
 export default function SalesOrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { order, loading, error, refresh } = useSalesOrder(id);
+  const dispatch = useDispatch();
+  const order = useSelector(selectSalesOrder);
+  const loading = useSelector(selectSalesOrderLoading);
+  const error = useSelector(selectSalesOrderError);
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchSalesOrder(id));
+  }, [dispatch, id]);
+
+  const refresh = () => dispatch(fetchSalesOrder(id));
 
   async function handleDelete() {
     if (!window.confirm(`Delete ${order.soNo}? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      await salesService.remove(order.id);
+      await dispatch(removeSalesOrder(order.id)).unwrap();
       navigate('/sales-orders');
     } catch {
       setDeleting(false);

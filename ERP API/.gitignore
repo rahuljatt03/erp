@@ -1,0 +1,5 @@
+# Visual Studio / .NET build artifacts — never commit these.
+.vs/
+bin/
+obj/
+*.user

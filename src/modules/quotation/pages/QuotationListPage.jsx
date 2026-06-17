@@ -1,18 +1,43 @@
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '../../../shared/components/PageHeader';
-import Button from '../../../shared/components/Button';
-import Card from '../../../shared/components/Card';
-import StatusSelect from '../../../shared/components/StatusSelect';
-import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
-import { AddIcon, QuotationIcon } from '../../../shared/components/icons';
-import { formatDate, formatNumber } from '../../../shared/utils/format';
-import { useQuotations } from '../useQuotations';
-import { QUOTE_STATUSES } from '../quotation.constants';
-import { quoteValue } from '../quotation.helpers';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import PageHeader from "../../../shared/components/PageHeader";
+import Button from "../../../shared/components/Button";
+import Card from "../../../shared/components/Card";
+import Badge from "../../../shared/components/Badge";
+import {
+  LoadingState,
+  EmptyState,
+  ErrorState,
+} from "../../../shared/components/states";
+import { AddIcon, QuotationIcon } from "../../../shared/components/icons";
+import {
+  formatDate,
+  formatNumber,
+  todayIso,
+} from "../../../shared/utils/format";
+import {
+  fetchQuotations,
+  selectQuotations,
+  selectQuotationsError,
+  selectQuotationsLoading,
+} from "../quotationSlice";
+import { getQuoteStatusMeta } from "../quotation.constants";
+import { quoteValue, isQuoteExpired } from "../quotation.helpers";
 
 export default function QuotationListPage() {
-  const { quotes, loading, error, refresh, updateStatus, savingId } = useQuotations();
+  const dispatch = useDispatch();
+  const quotes = useSelector(selectQuotations);
+  const loading = useSelector(selectQuotationsLoading);
+  const error = useSelector(selectQuotationsError);
   const navigate = useNavigate();
+  const today = todayIso();
+
+  useEffect(() => {
+    dispatch(fetchQuotations());
+  }, [dispatch]);
+
+  const refresh = () => dispatch(fetchQuotations());
 
   return (
     <>
@@ -67,10 +92,18 @@ export default function QuotationListPage() {
                       <td className="cell-mono">{quote.quoteNo}</td>
                       <td className="cell-strong">{quote.customerName}</td>
                       <td>{formatDate(quote.quoteDate)}</td>
-                      <td>{quote.validUntil ? formatDate(quote.validUntil) : <span className="muted">—</span>}</td>
+                      <td>
+                        {quote.validUntil ? (
+                          formatDate(quote.validUntil)
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
+                      </td>
                       <td>
                         {quote.sourceInquiryNo ? (
-                          <span className="cell-mono">{quote.sourceInquiryNo}</span>
+                          <span className="cell-mono">
+                            {quote.sourceInquiryNo}
+                          </span>
                         ) : (
                           <span className="muted">Direct</span>
                         )}

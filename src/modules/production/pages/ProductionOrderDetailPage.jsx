@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/format';
-import { useProductionOrder } from '../useProduction';
-import { productionService } from '../production.service';
+import {
+  fetchProductionOrder,
+  produceProductionOrder,
+  removeProductionOrder,
+  selectProductionOrder,
+  selectProductionOrderError,
+  selectProductionOrderLoading,
+} from '../productionSlice';
 import { getWoStatusMeta } from '../production.constants';
 import { woProgress } from '../production.helpers';
 import {
@@ -30,12 +37,21 @@ function Detail({ label, children }) {
 export default function ProductionOrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { order, loading, error, refresh } = useProductionOrder(id);
+  const dispatch = useDispatch();
+  const order = useSelector(selectProductionOrder);
+  const loading = useSelector(selectProductionOrderLoading);
+  const error = useSelector(selectProductionOrderError);
 
   const [qty, setQty] = useState('0');
   const [producing, setProducing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [flash, setFlash] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchProductionOrder(id));
+  }, [dispatch, id]);
+
+  const refresh = () => dispatch(fetchProductionOrder(id));
 
   useEffect(() => {
     if (!order) return;
@@ -48,8 +64,8 @@ export default function ProductionOrderDetailPage() {
     setProducing(true);
     setFlash(null);
     try {
-      await productionService.produce(order.id, amount);
-      await refresh();
+      await dispatch(produceProductionOrder({ id: order.id, qty: amount })).unwrap();
+      await dispatch(fetchProductionOrder(order.id));
       setFlash('Production reported: materials consumed and finished goods added to inventory.');
     } finally {
       setProducing(false);
@@ -60,7 +76,7 @@ export default function ProductionOrderDetailPage() {
     if (!window.confirm(`Delete ${order.woNo}? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      await productionService.remove(order.id);
+      await dispatch(removeProductionOrder(order.id)).unwrap();
       navigate('/production');
     } catch {
       setDeleting(false);

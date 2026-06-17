@@ -1,18 +1,40 @@
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '../../../shared/components/PageHeader';
-import Button from '../../../shared/components/Button';
-import Card from '../../../shared/components/Card';
-import StatusSelect from '../../../shared/components/StatusSelect';
-import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
-import { AddIcon, InquiryIcon } from '../../../shared/components/icons';
-import { formatDate } from '../../../shared/utils/format';
-import { useInquiries } from '../useInquiries';
-import { INQUIRY_STATUSES } from '../inquiry.constants';
-import { summariseProducts, countItems, earliestDelivery } from '../inquiry.helpers';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import PageHeader from "../../../shared/components/PageHeader";
+import Button from "../../../shared/components/Button";
+import Card from "../../../shared/components/Card";
+import Badge from "../../../shared/components/Badge";
+import {
+  LoadingState,
+  EmptyState,
+  ErrorState,
+} from "../../../shared/components/states";
+import { AddIcon, InquiryIcon } from "../../../shared/components/icons";
+import { formatDate } from "../../../shared/utils/format";
+import {
+  fetchInquiries,
+  selectInquiries,
+  selectInquiriesError,
+  selectInquiriesLoading,
+} from "../inquirySlice";
+import { getStatusMeta } from "../inquiry.constants";
+import {
+  summariseProducts,
+  countItems,
+  earliestDelivery,
+} from "../inquiry.helpers";
 
 export default function InquiryListPage() {
-  const { inquiries, loading, error, refresh, updateStatus, savingId } = useInquiries();
+  const dispatch = useDispatch();
+  const inquiries = useSelector(selectInquiries);
+  const loading = useSelector(selectInquiriesLoading);
+  const error = useSelector(selectInquiriesError);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchInquiries());
+  }, [dispatch]);
 
   return (
     <>
@@ -30,7 +52,7 @@ export default function InquiryListPage() {
         {loading ? (
           <LoadingState label="Loading inquiries…" />
         ) : error ? (
-          <ErrorState text={error} onRetry={refresh} />
+          <ErrorState text={error} onRetry={() => dispatch(fetchInquiries())} />
         ) : inquiries.length === 0 ? (
           <EmptyState
             icon={InquiryIcon}
@@ -70,14 +92,9 @@ export default function InquiryListPage() {
                       <td>{formatDate(inquiry.inquiryDate)}</td>
                       <td>{summariseProducts(inquiry)}</td>
                       <td className="num">{countItems(inquiry)}</td>
-                      <td>{earliest ? formatDate(earliest) : '—'}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <StatusSelect
-                          value={inquiry.status}
-                          options={INQUIRY_STATUSES}
-                          disabled={savingId === inquiry.id}
-                          onChange={(next) => updateStatus(inquiry.id, next)}
-                        />
+                      <td>{earliest ? formatDate(earliest) : "—"}</td>
+                      <td>
+                        <Badge tone={status.tone}>{status.label}</Badge>
                       </td>
                     </tr>
                   );

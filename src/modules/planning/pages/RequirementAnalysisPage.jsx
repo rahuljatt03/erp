@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
@@ -8,7 +9,7 @@ import { LoadingState, ErrorState, EmptyState } from '../../../shared/components
 import { formatNumber } from '../../../shared/utils/format';
 import { getStatusMeta } from '../../inquiry/inquiry.constants';
 import { useRequirementAnalysis } from '../useRequirementAnalysis';
-import { productionService } from '../../production/production.service';
+import { createProductionOrder } from '../../production/productionSlice';
 import {
   BackIcon,
   FinishedGoodsIcon,
@@ -31,6 +32,7 @@ const RAW_STATUS = {
 export default function RequirementAnalysisPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [creatingWOs, setCreatingWOs] = useState(false);
   const { inquiry, analysis, loading, error } = useRequirementAnalysis(id);
 
@@ -66,7 +68,7 @@ export default function RequirementAnalysisPage() {
     try {
       await Promise.all(
         buildLines.map((row) =>
-          productionService.create({
+          dispatch(createProductionOrder({
             productName: row.productName,
             productCode: row.productCode || '',
             finishedGoodId: row.finishedGoodId || null,
@@ -84,7 +86,7 @@ export default function RequirementAnalysisPage() {
               quantity: material.required,
               unit: material.unit,
             })),
-          }),
+          })).unwrap(),
         ),
       );
       navigate('/production');

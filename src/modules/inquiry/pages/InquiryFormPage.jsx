@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
-import { inquiryService } from '../inquiry.service';
+import { createInquiry, fetchInquiry, updateInquiry } from '../inquirySlice';
 import {
   INQUIRY_STATUSES,
   blankInquiryDraft,
@@ -45,6 +46,7 @@ export default function InquiryFormPage() {
   const { id } = useParams();
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [draft, setDraft] = useState(blankInquiryDraft);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -57,8 +59,8 @@ export default function InquiryFormPage() {
     if (mode !== 'edit') return;
     let active = true;
     setLoading(true);
-    inquiryService
-      .get(id)
+    dispatch(fetchInquiry(id))
+      .unwrap()
       .then((found) => {
         if (!active) return;
         if (!found) {
@@ -84,7 +86,7 @@ export default function InquiryFormPage() {
     return () => {
       active = false;
     };
-  }, [mode, id]);
+  }, [mode, id, dispatch]);
 
   const setField = (key, value) => setDraft((prev) => ({ ...prev, [key]: value }));
   const setItem = (updated) =>
@@ -106,8 +108,8 @@ export default function InquiryFormPage() {
     try {
       const saved =
         mode === 'edit'
-          ? await inquiryService.update(id, draft)
-          : await inquiryService.create(draft);
+          ? await dispatch(updateInquiry({ id, draft })).unwrap()
+          : await dispatch(createInquiry(draft)).unwrap();
       navigate(`/inquiries/${saved.id}`);
     } catch (err) {
       setErrors({

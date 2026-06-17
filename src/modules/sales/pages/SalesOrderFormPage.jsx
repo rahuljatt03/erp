@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
@@ -7,7 +8,7 @@ import Field from '../../../shared/components/Field';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createId } from '../../../shared/utils/id';
 import { formatNumber } from '../../../shared/utils/format';
-import { salesService } from '../sales.service';
+import { createSalesOrder, fetchSalesOrder, updateSalesOrder } from '../salesSlice';
 import { SO_STATUSES, UNITS, blankSODraft, blankSOItem } from '../sales.constants';
 import { soValue } from '../sales.helpers';
 import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
@@ -49,6 +50,7 @@ export default function SalesOrderFormPage() {
   const { id } = useParams();
   const mode = id ? 'edit' : 'create';
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
   const prefill = location.state?.prefill;
 
@@ -62,8 +64,8 @@ export default function SalesOrderFormPage() {
     if (mode !== 'edit') return;
     let active = true;
     setLoading(true);
-    salesService
-      .get(id)
+    dispatch(fetchSalesOrder(id))
+      .unwrap()
       .then((found) => {
         if (!active) return;
         if (!found) setLoadError('Sales order not found');
@@ -84,7 +86,7 @@ export default function SalesOrderFormPage() {
     return () => {
       active = false;
     };
-  }, [mode, id]);
+  }, [mode, id, dispatch]);
 
   const setField = (key, value) => setDraft((prev) => ({ ...prev, [key]: value }));
   const setItem = (itemId, patch) =>
@@ -104,7 +106,9 @@ export default function SalesOrderFormPage() {
     setSaving(true);
     try {
       const saved =
-        mode === 'edit' ? await salesService.update(id, draft) : await salesService.create(draft);
+        mode === 'edit'
+          ? await dispatch(updateSalesOrder({ id, draft })).unwrap()
+          : await dispatch(createSalesOrder(draft)).unwrap();
       navigate(`/sales-orders/${saved.id}`);
     } catch (err) {
       setErrors({ ...EMPTY_ERRORS, form: err instanceof Error ? err.message : 'Failed to save' });

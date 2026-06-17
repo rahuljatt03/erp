@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber, todayIso } from '../../../shared/utils/format';
-import { useQuotation } from '../useQuotations';
-import { quotationService } from '../quotation.service';
+import {
+  fetchQuotation,
+  removeQuotation,
+  setQuotationStatus,
+  selectQuotation,
+  selectQuotationError,
+  selectQuotationLoading,
+} from '../quotationSlice';
 import { getQuoteStatusMeta } from '../quotation.constants';
 import { quoteValue, isQuoteExpired } from '../quotation.helpers';
 import {
@@ -29,15 +36,24 @@ function Detail({ label, children }) {
 export default function QuotationDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { quote, loading, error, refresh } = useQuotation(id);
+  const dispatch = useDispatch();
+  const quote = useSelector(selectQuotation);
+  const loading = useSelector(selectQuotationLoading);
+  const error = useSelector(selectQuotationError);
   const [deleting, setDeleting] = useState(false);
   const [converting, setConverting] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchQuotation(id));
+  }, [dispatch, id]);
+
+  const refresh = () => dispatch(fetchQuotation(id));
 
   async function handleDelete() {
     if (!window.confirm(`Delete ${quote.quoteNo}? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      await quotationService.remove(quote.id);
+      await dispatch(removeQuotation(quote.id)).unwrap();
       navigate('/quotations');
     } catch {
       setDeleting(false);
@@ -50,7 +66,7 @@ export default function QuotationDetailPage() {
     // Mark the quotation as converted before handing off; the sales order's own
     // create step takes care of marking the source inquiry "converted".
     try {
-      await quotationService.setStatus(quote.id, 'converted');
+      await dispatch(setQuotationStatus({ id: quote.id, status: 'converted' })).unwrap();
     } catch {
       // Non-fatal — proceed to the order form regardless.
     }

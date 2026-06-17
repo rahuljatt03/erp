@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/format';
-import { usePurchaseOrder } from '../useProcurement';
-import { procurementService } from '../procurement.service';
+import {
+  fetchPurchaseOrder,
+  receivePurchaseOrder,
+  removePurchaseOrder,
+  selectPurchaseOrder,
+  selectPurchaseOrderError,
+  selectPurchaseOrderLoading,
+} from '../procurementSlice';
 import { getPoStatusMeta } from '../procurement.constants';
 import { poValue, poItemOutstanding, poReceiptProgress } from '../procurement.helpers';
 import {
@@ -30,12 +37,21 @@ function Detail({ label, children }) {
 export default function PurchaseOrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { order, loading, error, refresh } = usePurchaseOrder(id);
+  const dispatch = useDispatch();
+  const order = useSelector(selectPurchaseOrder);
+  const loading = useSelector(selectPurchaseOrderLoading);
+  const error = useSelector(selectPurchaseOrderError);
 
   const [receipts, setReceipts] = useState({});
   const [receiving, setReceiving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [flash, setFlash] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchPurchaseOrder(id));
+  }, [dispatch, id]);
+
+  const refresh = () => dispatch(fetchPurchaseOrder(id));
 
   // Default each line's "receive now" box to its outstanding quantity.
   useEffect(() => {
@@ -49,14 +65,16 @@ export default function PurchaseOrderDetailPage() {
 
   async function handleReceive() {
     const payload = Object.entries(receipts)
-      .map(([itemId, qty]) => ({ itemId, qty: Number(qty) || 0 }))
+      // Object keys are strings; item ids are numbers — coerce so the match in
+      // procurement.service.receive (it.id === receipt.itemId) succeeds.
+      .map(([itemId, qty]) => ({ itemId: Number(itemId), qty: Number(qty) || 0 }))
       .filter((r) => r.qty > 0);
     if (payload.length === 0) return;
     setReceiving(true);
     setFlash(null);
     try {
-      await procurementService.receive(order.id, payload);
-      await refresh();
+      await dispatch(receivePurchaseOrder({ id: order.id, receipts: payload })).unwrap();
+      await dispatch(fetchPurchaseOrder(order.id));
       setFlash('Stock received and added to inventory.');
     } finally {
       setReceiving(false);
@@ -67,7 +85,7 @@ export default function PurchaseOrderDetailPage() {
     if (!window.confirm(`Delete ${order.poNo}? This cannot be undone.`)) return;
     setDeleting(true);
     try {
-      await procurementService.remove(order.id);
+      await dispatch(removePurchaseOrder(order.id)).unwrap();
       navigate('/purchase-orders');
     } catch {
       setDeleting(false);

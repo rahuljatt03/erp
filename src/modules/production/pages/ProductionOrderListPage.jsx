@@ -1,17 +1,37 @@
-import { useNavigate } from 'react-router-dom';
-import PageHeader from '../../../shared/components/PageHeader';
-import Button from '../../../shared/components/Button';
-import Card from '../../../shared/components/Card';
-import StatusSelect from '../../../shared/components/StatusSelect';
-import { LoadingState, EmptyState, ErrorState } from '../../../shared/components/states';
-import { AddIcon, ProductionIcon } from '../../../shared/components/icons';
-import { formatDate, formatNumber } from '../../../shared/utils/format';
-import { useProductionOrders } from '../useProduction';
-import { WO_STATUSES } from '../production.constants';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import PageHeader from "../../../shared/components/PageHeader";
+import Button from "../../../shared/components/Button";
+import Card from "../../../shared/components/Card";
+import Badge from "../../../shared/components/Badge";
+import {
+  LoadingState,
+  EmptyState,
+  ErrorState,
+} from "../../../shared/components/states";
+import { AddIcon, ProductionIcon } from "../../../shared/components/icons";
+import { formatDate, formatNumber } from "../../../shared/utils/format";
+import {
+  fetchProductionOrders,
+  selectProductionOrders,
+  selectProductionOrdersError,
+  selectProductionOrdersLoading,
+} from "../productionSlice";
+import { getWoStatusMeta } from "../production.constants";
 
 export default function ProductionOrderListPage() {
-  const { orders, loading, error, refresh, updateStatus, savingId } = useProductionOrders();
+  const dispatch = useDispatch();
+  const orders = useSelector(selectProductionOrders);
+  const loading = useSelector(selectProductionOrdersLoading);
+  const error = useSelector(selectProductionOrdersError);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchProductionOrders());
+  }, [dispatch]);
+
+  const refresh = () => dispatch(fetchProductionOrders());
 
   return (
     <>
@@ -65,20 +85,17 @@ export default function ProductionOrderListPage() {
                       <td className="cell-mono">{wo.woNo}</td>
                       <td className="cell-strong">
                         {wo.productName}
-                        {wo.productCode ? <span className="muted"> · {wo.productCode}</span> : null}
+                        {wo.productCode ? (
+                          <span className="muted"> · {wo.productCode}</span>
+                        ) : null}
                       </td>
                       <td className="num">
                         {formatNumber(wo.quantity)} {wo.unit}
                       </td>
                       <td className="num">{formatNumber(wo.producedQty)}</td>
-                      <td>{wo.dueDate ? formatDate(wo.dueDate) : '—'}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        <StatusSelect
-                          value={wo.status}
-                          options={WO_STATUSES}
-                          disabled={savingId === wo.id}
-                          onChange={(next) => updateStatus(wo.id, next)}
-                        />
+                      <td>{wo.dueDate ? formatDate(wo.dueDate) : "—"}</td>
+                      <td>
+                        <Badge tone={status.tone}>{status.label}</Badge>
                       </td>
                     </tr>
                   );
