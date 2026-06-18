@@ -55,17 +55,13 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
 
   return (
     <TableRow>
-      <TableCell className="font-mono text-xs">{item[codeKey]}</TableCell>
+      <TableCell className="px-6 font-mono text-xs">{item[codeKey]}</TableCell>
       <TableCell className="font-medium">{item.name}</TableCell>
       <TableCell>{item.unit}</TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
-          {saving ? <span className="text-muted-foreground text-sm">saving…</span> : null}
-          {saved && !saving ? (
-            <span className="text-green-600 text-sm"><CheckIcon size={13} /> saved</span>
-          ) : null}
+      <TableCell>
+        <div className="flex items-center gap-2">
           <Input
-            className="w-28 text-right"
+            className="w-28"
             type="number"
             min="0"
             step="any"
@@ -79,14 +75,18 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
               if (event.key === 'Enter') event.currentTarget.blur();
             }}
           />
+          {saving ? <span className="text-muted-foreground text-sm">saving…</span> : null}
+          {saved && !saving ? (
+            <span className="text-green-600 text-sm"><CheckIcon size={13} /> saved</span>
+          ) : null}
         </div>
       </TableCell>
-      <TableCell className="w-12 text-right">
+      <TableCell className="px-6 text-center">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="text-muted-foreground hover:text-destructive size-8"
+          className="text-destructive hover:text-destructive hover:bg-destructive/10 size-8"
           title={`Delete ${item.name}`}
           aria-label={`Delete ${item.name}`}
           onClick={handleDelete}
@@ -113,11 +113,11 @@ export default function StockTable({ items, codeKey, codeLabel, onSave, onDelete
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{codeLabel}</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Unit</TableHead>
-          <TableHead className="text-right">On hand</TableHead>
-          <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
+          <TableHead className="w-1/5 px-6">{codeLabel}</TableHead>
+          <TableHead className="w-1/5">Name</TableHead>
+          <TableHead className="w-1/5">Unit</TableHead>
+          <TableHead className="w-1/5">On hand</TableHead>
+          <TableHead className="w-1/5 px-6 text-center">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -127,13 +127,13 @@ export default function StockTable({ items, codeKey, codeLabel, onSave, onDelete
       </TableBody>
       <TableFooter>
         <TableRow>
-          <TableCell colSpan={3} className="text-muted-foreground text-sm">
+          <TableCell colSpan={3} className="px-6 text-muted-foreground text-sm">
             {items.length} item{items.length === 1 ? '' : 's'}
           </TableCell>
-          <TableCell className="text-right text-muted-foreground text-sm">
+          <TableCell className="text-muted-foreground text-sm">
             {formatNumber(items.reduce((sum, item) => sum + (Number(item.onHand) || 0), 0))} total
           </TableCell>
-          <TableCell className="w-12" />
+          <TableCell />
         </TableRow>
       </TableFooter>
     </Table>

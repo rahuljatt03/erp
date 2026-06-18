@@ -108,7 +108,6 @@ export default function QuotationListPage() {
                   <th>Customer</th>
                   <th>Quote date</th>
                   <th>Valid until</th>
-                  <th>Source</th>
                   <th className="num">Value</th>
                   <th>Status</th>
                 </tr>
@@ -129,15 +128,6 @@ export default function QuotationListPage() {
                           formatDate(quote.validUntil)
                         ) : (
                           <span className="muted">—</span>
-                        )}
-                      </td>
-                      <td>
-                        {quote.sourceInquiryNo ? (
-                          <span className="cell-mono">
-                            {quote.sourceInquiryNo}
-                          </span>
-                        ) : (
-                          <span className="muted">Direct</span>
                         )}
                       </td>
                       <td className="num">{formatNumber(quoteValue(quote))}</td>

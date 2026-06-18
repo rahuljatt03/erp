@@ -75,6 +75,7 @@ export default function InventoryPage() {
                     codeKey="sku"
                     codeLabel="SKU"
                     itemLabel="finished good"
+                    title="Finished goods"
                     defaultUnit="pcs"
                     onSave={async (id, onHand) => {
                       try {
@@ -118,6 +119,7 @@ export default function InventoryPage() {
                     codeKey="code"
                     codeLabel="Code"
                     itemLabel="raw material"
+                    title="Raw materials"
                     defaultUnit="kg"
                     onSave={async (id, onHand) => {
                       try {

@@ -517,8 +517,9 @@ a:not([data-slot="button"]):not(.nav-item):hover {
 }
 .page-header__actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 10px;
-  flex-shrink: 0;
 }
 
 /* ---------- Buttons ------------------------------------------------------ */
@@ -644,12 +645,16 @@ svg.lucide {
 /* ---------- Tables ------------------------------------------------------- */
 
 .table-wrap {
-  overflow-x: auto;
+  overflow: visible;
 }
 .table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+}
+/* Honour <colgroup> widths so columns are proportioned, not content-sized. */
+.table-fixed {
+  table-layout: fixed;
 }
 .table th {
   text-align: left;
@@ -719,42 +724,103 @@ svg.lucide {
 
 /* ---------- Inline status select (editable status pill in tables) -------- */
 
-.status-select {
-  appearance: none;
-  -webkit-appearance: none;
+/* Custom status dropdown (trigger pill + styled popup menu). */
+.status-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.status-pill {
   display: inline-flex;
   align-items: center;
+  gap: 7px;
   max-width: 100%;
-  padding: 3px 26px 3px 10px;
+  padding: 4px 9px 4px 10px;
   border: 1px solid transparent;
   border-radius: 999px;
   font-family: inherit;
   font-size: 12px;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.4;
   cursor: pointer;
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 11px 11px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   transition: filter 0.12s, box-shadow 0.12s;
 }
-.status-select:hover {
+.status-pill:hover {
   filter: brightness(0.96);
 }
-.status-select:focus-visible {
+.status-pill:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--brand-100);
 }
-.status-select:disabled {
+.status-pill:disabled {
   cursor: progress;
   opacity: 0.6;
 }
-.status-select--neutral { color: var(--neutral); background-color: var(--neutral-bg); }
-.status-select--info    { color: var(--info);    background-color: var(--info-bg); }
-.status-select--warning { color: var(--warning); background-color: var(--warning-bg); }
-.status-select--success { color: var(--success); background-color: var(--success-bg); }
-.status-select--danger  { color: var(--danger);  background-color: var(--danger-bg); }
+.status-pill__chevron {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.status-pill--neutral { color: var(--neutral); background-color: var(--neutral-bg); }
+.status-pill--info    { color: var(--info);    background-color: var(--info-bg); }
+.status-pill--warning { color: var(--warning); background-color: var(--warning-bg); }
+.status-pill--success { color: var(--success); background-color: var(--success-bg); }
+.status-pill--danger  { color: var(--danger);  background-color: var(--danger-bg); }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.status-dot--neutral { background: var(--neutral); }
+.status-dot--info    { background: var(--info); }
+.status-dot--warning { background: var(--warning); }
+.status-dot--success { background: var(--success); }
+.status-dot--danger  { background: var(--danger); }
+
+.status-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  min-width: 180px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.status-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-strong);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.status-menu__item:hover {
+  background: var(--brand-50);
+}
+.status-menu__item.is-selected {
+  font-weight: 600;
+}
+.status-menu__label {
+  flex: 1;
+}
+.status-menu__check {
+  color: var(--brand-700);
+  flex-shrink: 0;
+}
 
 /* ---------- Forms -------------------------------------------------------- */
 
@@ -810,6 +876,20 @@ svg.lucide {
 .select.has-error {
   border-color: var(--danger);
 }
+/* Keep date/time inputs aligned with the other form controls. */
+.input[type='date'],
+.input[type='time'] {
+  width: 100%;
+}
+.input[type='date']::-webkit-calendar-picker-indicator,
+.input[type='time']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+.input[type='date']:hover::-webkit-calendar-picker-indicator,
+.input[type='time']:hover::-webkit-calendar-picker-indicator {
+  opacity: 1;
+}
 .textarea {
   resize: vertical;
   min-height: 76px;
@@ -832,7 +912,8 @@ svg.lucide {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px 16px;
+  align-items: start;
 }
 .form-grid--3 {
   grid-template-columns: repeat(3, 1fr);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
@@ -17,6 +17,7 @@ import LineItemEditor from '../components/LineItemEditor';
 import { AddIcon } from '../../../shared/components/icons';
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
+import { scrollToFirstError } from '../../../shared/utils/scrollToError';
 
 /** Validates a draft and returns `{ errors, hasErrors }`. */
 function validate(draft) {
@@ -50,6 +51,7 @@ export default function InquiryFormPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const toast = useToast();
+  const formRef = useRef(null);
 
   const [draft, setDraft] = useState(blankInquiryDraft);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -105,7 +107,14 @@ export default function InquiryFormPage() {
     event.preventDefault();
     const result = validate(draft);
     setErrors(result.errors);
-    if (result.hasErrors) return;
+    if (result.hasErrors) {
+      toast.warn(
+        'Please fix the highlighted fields',
+        result.errors.form || 'Some required information is missing or invalid.',
+      );
+      scrollToFirstError(formRef.current);
+      return;
+    }
 
     const ok = await confirm({
       message: mode === 'edit' ? 'Save changes to this inquiry?' : 'Create this inquiry?',
@@ -152,7 +161,7 @@ export default function InquiryFormPage() {
   const cancelTo = mode === 'edit' ? `/inquiries/${id}` : '/inquiries';
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
         title={mode === 'edit' ? 'Edit inquiry' : 'New inquiry'}
         subtitle="Capture what the customer wants to order and the raw materials each product needs."
@@ -169,7 +178,7 @@ export default function InquiryFormPage() {
       />
 
       {errors.form ? (
-        <div className="banner" style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}>
+        <div className="banner banner--error" style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}>
           {errors.form}
         </div>
       ) : null}

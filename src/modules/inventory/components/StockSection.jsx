@@ -20,6 +20,7 @@ export default function StockSection({
   codeKey,
   codeLabel,
   itemLabel,
+  title,
   defaultUnit = 'pcs',
   onSave,
   onAdd,
@@ -92,6 +93,7 @@ export default function StockSection({
   return (
     <Card
       bodyFlush
+      title={`${title ?? itemLabel} (${items.length})`}
       actions={
         <Button variant="primary" size="sm" onClick={open}>
           <AddIcon /> Add {itemLabel}

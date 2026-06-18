@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
@@ -14,6 +14,7 @@ import { soValue } from '../sales.helpers';
 import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
+import { scrollToFirstError } from '../../../shared/utils/scrollToError';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -56,6 +57,7 @@ export default function SalesOrderFormPage() {
   const location = useLocation();
   const prefill = location.state?.prefill;
   const toast = useToast();
+  const formRef = useRef(null);
 
   const [draft, setDraft] = useState(() => initialDraft(mode === 'create' ? prefill : null));
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -105,7 +107,14 @@ export default function SalesOrderFormPage() {
     event.preventDefault();
     const result = validate(draft);
     setErrors(result.errors);
-    if (result.hasErrors) return;
+    if (result.hasErrors) {
+      toast.warn(
+        'Please fix the highlighted fields',
+        result.errors.form || 'Some required information is missing or invalid.',
+      );
+      scrollToFirstError(formRef.current);
+      return;
+    }
     const ok = await confirm({
       message: mode === 'edit' ? 'Save changes to this sales order?' : 'Create this sales order?',
       header: mode === 'edit' ? 'Save changes?' : 'Create order?',
@@ -146,7 +155,7 @@ export default function SalesOrderFormPage() {
   const cancelTo = mode === 'edit' ? `/sales-orders/${id}` : '/sales-orders';
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
         title={mode === 'edit' ? 'Edit sales order' : 'New sales order'}
         subtitle="Confirm what the customer is ordering and the agreed pricing."
@@ -171,7 +180,7 @@ export default function SalesOrderFormPage() {
 
       {errors.form ? (
         <div
-          className="banner"
+          className="banner banner--error"
           style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
         >
           {errors.form}

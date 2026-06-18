@@ -1,41 +1,121 @@
 /**
  * Inline status changer for list tables.
  *
- * Renders a tone-coloured native <select> styled to read like the status pill,
- * so a status can be reassigned without opening the record. It stops its own
- * click/change events from bubbling, so interacting with it never triggers the
- * surrounding clickable row's navigation.
+ * A custom dropdown (not a native <select>) so the open menu can be fully
+ * styled to match the app: a tone-coloured pill trigger that opens a panel of
+ * tone-dot options with a check on the current one. Closes on outside click or
+ * Escape. Stops its own click events from bubbling so interacting with it never
+ * triggers the surrounding clickable row's navigation.
  *
  * `options` is a module's `*_STATUSES` array ([{ value, label, tone }]); the
- * pill colour follows the currently-selected option's tone.
+ * pill and option dots follow each option's tone.
+ *
+ * Keeps the original API (value / options / onChange / disabled) so existing
+ * call sites work unchanged.
  */
+import { useEffect, useRef, useState } from 'react';
+
 export default function StatusSelect({ value, options, onChange, disabled = false }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef(null);
+
   const current = options.find((opt) => opt.value === value);
   const tone = current?.tone ?? 'neutral';
-  const known = current != null;
+  const label = current?.label ?? value ?? '—';
+
+  // Close on outside click or Escape.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDocClick = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const stop = (e) => e.stopPropagation();
+
+  const choose = (e, next) => {
+    e.stopPropagation();
+    setOpen(false);
+    if (next !== value) onChange(next);
+  };
 
   return (
-    <select
-      className={`status-select status-select--${tone}`}
-      value={value ?? ''}
-      disabled={disabled}
-      aria-label="Change status"
-      title="Change status"
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
-      onChange={(e) => {
-        e.stopPropagation();
-        const next = e.target.value;
-        if (next !== value) onChange(next);
-      }}
-    >
-      {/* Keep an unknown stored value visible rather than silently snapping to the first option. */}
-      {!known && value != null && value !== '' ? <option value={value}>{value}</option> : null}
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+    <div className="status-dropdown" ref={rootRef} onClick={stop} onMouseDown={stop}>
+      <button
+        type="button"
+        className={`status-pill status-pill--${tone}`}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        title="Change status"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (!disabled) setOpen((v) => !v);
+        }}
+      >
+        <span className={`status-dot status-dot--${tone}`} />
+        <span className="status-pill__label">{label}</span>
+        <svg
+          className="status-pill__chevron"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {open ? (
+        <ul className="status-menu" role="listbox">
+          {options.map((opt) => {
+            const selected = opt.value === value;
+            return (
+              <li key={opt.value}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  className={`status-menu__item ${selected ? 'is-selected' : ''}`}
+                  onClick={(e) => choose(e, opt.value)}
+                >
+                  <span className="status-menu__label">{opt.label}</span>
+                  {selected ? (
+                    <svg
+                      className="status-menu__check"
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  ) : null}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
   );
 }

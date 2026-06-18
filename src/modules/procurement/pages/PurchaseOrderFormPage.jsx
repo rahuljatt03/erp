@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
@@ -19,6 +19,7 @@ import { formatNumber } from '../../../shared/utils/format';
 import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
+import { scrollToFirstError } from '../../../shared/utils/scrollToError';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -69,6 +70,7 @@ export default function PurchaseOrderFormPage() {
   const location = useLocation();
   const prefill = location.state?.prefill;
   const toast = useToast();
+  const formRef = useRef(null);
 
   const [draft, setDraft] = useState(() => initialDraft(mode === 'create' ? prefill : null));
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -118,7 +120,14 @@ export default function PurchaseOrderFormPage() {
     event.preventDefault();
     const result = validate(draft);
     setErrors(result.errors);
-    if (result.hasErrors) return;
+    if (result.hasErrors) {
+      toast.warn(
+        'Please fix the highlighted fields',
+        result.errors.form || 'Some required information is missing or invalid.',
+      );
+      scrollToFirstError(formRef.current);
+      return;
+    }
 
     const ok = await confirm({
       message: mode === 'edit' ? 'Save changes to this purchase order?' : 'Create this purchase order?',
@@ -161,7 +170,7 @@ export default function PurchaseOrderFormPage() {
   const cancelTo = mode === 'edit' ? `/purchase-orders/${id}` : '/purchase-orders';
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
         title={mode === 'edit' ? 'Edit purchase order' : 'New purchase order'}
         subtitle="Order raw materials from a supplier. Receiving adds stock to inventory."
@@ -186,7 +195,7 @@ export default function PurchaseOrderFormPage() {
 
       {errors.form ? (
         <div
-          className="banner"
+          className="banner banner--error"
           style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
         >
           {errors.form}
@@ -227,6 +236,7 @@ export default function PurchaseOrderFormPage() {
                 onChange={(event) => setField('expectedDate', event.target.value)}
               />
             </Field>
+            <div aria-hidden="true" />
             <Field label="Status">
               <select
                 className="select"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
@@ -171,13 +171,6 @@ export default function QuotationDetailPage() {
               {quote.validUntil ? formatDate(quote.validUntil) : '—'}
             </Detail>
             <Detail label="Quotation value">{formatNumber(quoteValue(quote))}</Detail>
-            <Detail label="Source inquiry">
-              {quote.sourceInquiryId ? (
-                <Link to={`/inquiries/${quote.sourceInquiryId}`}>{quote.sourceInquiryNo || 'Inquiry'}</Link>
-              ) : (
-                <span className="muted">Direct quotation</span>
-              )}
-            </Detail>
           </div>
           {quote.notes ? (
             <>

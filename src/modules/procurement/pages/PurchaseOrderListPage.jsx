@@ -99,7 +99,15 @@ export default function PurchaseOrderListPage() {
           />
         ) : (
           <div className="table-wrap">
-            <table className="table">
+            <table className="table table-fixed">
+              <colgroup>
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '18%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>PO No.</th>

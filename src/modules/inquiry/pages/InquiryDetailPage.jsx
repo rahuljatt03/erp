@@ -178,9 +178,6 @@ export default function InquiryDetailPage() {
             <Detail label="Customer">{inquiry.customerName}</Detail>
             <Detail label="Contact">{inquiry.customerContact || '—'}</Detail>
             <Detail label="Inquiry date">{formatDate(inquiry.inquiryDate)}</Detail>
-            <Detail label="Status">
-              <Badge tone={status.tone}>{status.label}</Badge>
-            </Detail>
             <Detail label="Last updated">{formatDateTime(inquiry.updatedAt)}</Detail>
           </div>
           {inquiry.notes ? (
@@ -192,26 +189,21 @@ export default function InquiryDetailPage() {
           ) : null}
         </Card>
 
-        <Card
-          title={`Products & raw materials (${inquiry.items.length})`}
-          bodyFlush
-        >
+        <Card title={`Products & raw materials (${inquiry.items.length})`} bodyFlush>
           <div className="table-wrap">
             <table className="table">
               <thead>
                 <tr>
-                  <th>#</th>
                   <th>Product</th>
                   <th>Code</th>
-                  <th className="num">Quantity</th>
+                  <th>Quantity</th>
                   <th>Delivery date</th>
                   <th>Raw materials needed</th>
                 </tr>
               </thead>
               <tbody>
-                {inquiry.items.map((item, index) => (
+                {inquiry.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="num">{index + 1}</td>
                     <td className="cell-strong">
                       {item.productName}
                       {item.remarks ? (
@@ -220,8 +212,8 @@ export default function InquiryDetailPage() {
                         </div>
                       ) : null}
                     </td>
-                    <td>{item.productCode || '—'}</td>
-                    <td className="num">
+                    <td className="cell-mono">{item.productCode || '—'}</td>
+                    <td>
                       {formatNumber(item.quantity)} {item.unit}
                     </td>
                     <td>{formatDate(item.targetDeliveryDate)}</td>
@@ -229,14 +221,12 @@ export default function InquiryDetailPage() {
                       {item.rawMaterials.length === 0 ? (
                         <span className="muted">None specified</span>
                       ) : (
-                        <div>
-                          {item.rawMaterials.map((material) => (
-                            <span className="material-chip" key={material.id}>
-                              <strong>{material.materialName}</strong>
-                              {formatNumber(material.quantity)} {material.unit}
-                            </span>
-                          ))}
-                        </div>
+                        item.rawMaterials.map((material) => (
+                          <span className="material-chip" key={material.id}>
+                            <strong>{material.materialName}</strong>
+                            {formatNumber(material.quantity)} {material.unit}
+                          </span>
+                        ))
                       )}
                     </td>
                   </tr>

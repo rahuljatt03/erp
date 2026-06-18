@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import PageHeader from '../../../shared/components/PageHeader';
@@ -11,9 +11,10 @@ import { formatNumber } from '../../../shared/utils/format';
 import { createQuotation, fetchQuotation, updateQuotation } from '../quotationSlice';
 import { QUOTE_STATUSES, UNITS, blankQuoteDraft, blankQuoteItem } from '../quotation.constants';
 import { quoteValue } from '../quotation.helpers';
-import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons';
+import { AddIcon, RemoveIcon } from '../../../shared/components/icons';
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
+import { scrollToFirstError } from '../../../shared/utils/scrollToError';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
@@ -59,6 +60,7 @@ export default function QuotationFormPage() {
   const location = useLocation();
   const prefill = location.state?.prefill;
   const toast = useToast();
+  const formRef = useRef(null);
 
   const [draft, setDraft] = useState(() => initialDraft(mode === 'create' ? prefill : null));
   const [errors, setErrors] = useState(EMPTY_ERRORS);
@@ -108,7 +110,14 @@ export default function QuotationFormPage() {
     event.preventDefault();
     const result = validate(draft);
     setErrors(result.errors);
-    if (result.hasErrors) return;
+    if (result.hasErrors) {
+      toast.warn(
+        'Please fix the highlighted fields',
+        result.errors.form || 'Some required information is missing or invalid.',
+      );
+      scrollToFirstError(formRef.current);
+      return;
+    }
     const ok = await confirm({
       message: mode === 'edit' ? 'Save changes to this quotation?' : 'Create this quotation?',
       header: mode === 'edit' ? 'Save changes?' : 'Create quotation?',
@@ -149,7 +158,7 @@ export default function QuotationFormPage() {
   const cancelTo = mode === 'edit' ? `/quotations/${id}` : '/quotations';
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
         title={mode === 'edit' ? 'Edit quotation' : 'New quotation'}
         subtitle="Offer the customer a price for the products they asked about."
@@ -165,16 +174,9 @@ export default function QuotationFormPage() {
         }
       />
 
-      {draft.sourceInquiryNo ? (
-        <div className="banner" style={{ marginBottom: 18 }}>
-          <LinkIcon size={16} /> Quoting inquiry <strong>&nbsp;{draft.sourceInquiryNo}</strong>. Saving will mark that
-          inquiry as <strong>&nbsp;Quoted</strong>.
-        </div>
-      ) : null}
-
       {errors.form ? (
         <div
-          className="banner"
+          className="banner banner--error"
           style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
         >
           {errors.form}
@@ -206,14 +208,6 @@ export default function QuotationFormPage() {
                 onChange={(event) => setField('quoteDate', event.target.value)}
               />
             </Field>
-            <Field label="Valid until" hint="Offer expiry (optional)" error={errors.fields.validUntil}>
-              <input
-                className={`input ${errors.fields.validUntil ? 'has-error' : ''}`}
-                type="date"
-                value={draft.validUntil}
-                onChange={(event) => setField('validUntil', event.target.value)}
-              />
-            </Field>
             <Field label="Status">
               <select className="select" value={draft.status} onChange={(event) => setField('status', event.target.value)}>
                 {QUOTE_STATUSES.map((status) => (
@@ -236,7 +230,17 @@ export default function QuotationFormPage() {
           bodyFlush
         >
           <div className="table-wrap">
-            <table className="table">
+            <table className="table table-fixed">
+              <colgroup>
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '4%' }} />
+              </colgroup>
               <thead>
                 <tr>
                   <th>Product</th>
@@ -265,7 +269,6 @@ export default function QuotationFormPage() {
                       <td>
                         <input
                           className="input"
-                          style={{ width: 100 }}
                           placeholder="Code"
                           value={item.productCode}
                           onChange={(event) => setItem(item.id, { productCode: event.target.value })}
@@ -274,7 +277,7 @@ export default function QuotationFormPage() {
                       <td className="num">
                         <input
                           className={`input ${itemErr.quantity ? 'has-error' : ''}`}
-                          style={{ width: 80, textAlign: 'right' }}
+                          style={{ textAlign: 'right' }}
                           type="number"
                           min="0"
                           step="any"
@@ -285,7 +288,6 @@ export default function QuotationFormPage() {
                       <td>
                         <select
                           className="select"
-                          style={{ width: 80 }}
                           value={item.unit}
                           onChange={(event) => setItem(item.id, { unit: event.target.value })}
                         >
@@ -299,7 +301,6 @@ export default function QuotationFormPage() {
                       <td>
                         <input
                           className="input"
-                          style={{ width: 150 }}
                           type="date"
                           value={item.deliveryDate}
                           onChange={(event) => setItem(item.id, { deliveryDate: event.target.value })}
@@ -308,7 +309,7 @@ export default function QuotationFormPage() {
                       <td className="num">
                         <input
                           className="input"
-                          style={{ width: 100, textAlign: 'right' }}
+                          style={{ textAlign: 'right' }}
                           type="number"
                           min="0"
                           step="any"
