@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../shared/components/PageHeader";
 import Button from "../../../shared/components/Button";
 import Card from "../../../shared/components/Card";
-import Badge from "../../../shared/components/Badge";
+import StatusSelect from "../../../shared/components/StatusSelect";
 import {
   LoadingState,
   EmptyState,
@@ -14,11 +14,14 @@ import { AddIcon, ProductionIcon } from "../../../shared/components/icons";
 import { formatDate, formatNumber } from "../../../shared/utils/format";
 import {
   fetchProductionOrders,
+  updateProductionOrder,
   selectProductionOrders,
   selectProductionOrdersError,
   selectProductionOrdersLoading,
 } from "../productionSlice";
-import { getWoStatusMeta } from "../production.constants";
+import { WO_STATUSES } from "../production.constants";
+import { useToast } from "../../../shared/feedback/FeedbackProvider";
+import { confirm, statusNeedsConfirm } from "../../../shared/feedback/confirm";
 
 export default function ProductionOrderListPage() {
   const dispatch = useDispatch();
@@ -26,12 +29,43 @@ export default function ProductionOrderListPage() {
   const loading = useSelector(selectProductionOrdersLoading);
   const error = useSelector(selectProductionOrdersError);
   const navigate = useNavigate();
+  const toast = useToast();
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProductionOrders());
   }, [dispatch]);
 
   const refresh = () => dispatch(fetchProductionOrders());
+
+  // Inline status change from the list. The API's PUT is a full replace, so send
+  // the whole work order back with only the status swapped, then refresh.
+  async function updateStatus(id, status) {
+    const order = orders.find((wo) => wo.id === id);
+    if (!order) return;
+    const label = WO_STATUSES.find((s) => s.value === status)?.label ?? status;
+    if (statusNeedsConfirm(status)) {
+      const ok = await confirm({
+        message:
+          status === 'completed'
+            ? `Mark ${order.woNo} as “${label}”? This consumes the materials and adds the finished goods to inventory.`
+            : `Mark ${order.woNo} as “${label}”?`,
+        header: 'Change status?',
+        acceptLabel: 'Change',
+      });
+      if (!ok) return;
+    }
+    setSavingId(id);
+    try {
+      await dispatch(updateProductionOrder({ id, draft: { ...order, status } })).unwrap();
+      await dispatch(fetchProductionOrders());
+      toast.success('Status updated', `${order.woNo} → ${label}.`);
+    } catch (err) {
+      toast.error('Update failed', err instanceof Error ? err.message : 'Could not update status.');
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   return (
     <>
@@ -70,12 +104,11 @@ export default function ProductionOrderListPage() {
                   <th className="num">Produced</th>
                   <th>Due date</th>
                   <th>Source</th>
-                  <th>Status</th>
+                  <th style={{ paddingLeft: 40 }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((wo) => {
-                  const status = getWoStatusMeta(wo.status);
                   return (
                     <tr
                       key={wo.id}
@@ -113,8 +146,13 @@ export default function ProductionOrderListPage() {
                           <span className="muted">Direct</span>
                         )}
                       </td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td style={{ paddingLeft: 40 }} onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={wo.status}
+                          options={WO_STATUSES}
+                          disabled={savingId === wo.id}
+                          onChange={(next) => updateStatus(wo.id, next)}
+                        />
                       </td>
                     </tr>
                   );

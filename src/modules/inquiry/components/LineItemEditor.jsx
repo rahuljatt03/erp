@@ -99,15 +99,6 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
               onChange={(event) => update({ targetDeliveryDate: event.target.value })}
             />
           </Field>
-
-          <Field label="Remarks" hint="Finish, tolerances, etc." className="col-span-3">
-            <input
-              className="input"
-              placeholder="Optional notes for this product"
-              value={item.remarks}
-              onChange={(event) => update({ remarks: event.target.value })}
-            />
-          </Field>
         </div>
 
         <div className="materials">

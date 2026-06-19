@@ -106,7 +106,7 @@ export default function QuotationListPage() {
                   <th>Customer</th>
                   <th>Quote date</th>
                   <th className="num">Value</th>
-                  <th>Status</th>
+                  <th style={{ paddingLeft: 40 }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,7 +121,7 @@ export default function QuotationListPage() {
                       <td className="cell-strong">{quote.customerName}</td>
                       <td>{formatDate(quote.quoteDate)}</td>
                       <td className="num">{formatNumber(quoteValue(quote))}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
+                      <td style={{ paddingLeft: 40 }} onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
                           value={quote.status}
                           options={QUOTE_STATUSES}
