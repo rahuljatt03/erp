@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createApiClient, runRequest, toApiError } from '../../shared/api/client';
 
 /**
- * Work-order Redux slice — talks to the .NET ERP API directly.
+ * Work-order Redux slice — talks to the .NET ERP API directly via the shared axios client.
  *
  * Component → dispatch → slice (request) → state. `produceProductionOrder` is the
  * loop-closer: the backend advances the work order's producedQty / consumedQty /
@@ -13,30 +14,20 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
  * Set VITE_API_BASE_URL in a .env file to override the API origin.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080';
-const ENDPOINT = `${API_BASE}/api/production-orders`;
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
-
-/** Parse JSON if present; throw a helpful error on non-2xx responses. */
-async function handle(response) {
-  if (response.status === 204) return null;
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    const message = data?.title || data?.message || `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-  return data;
-}
+const api = createApiClient('/api/production-orders');
 
 const errMessage = (err, fallback) =>
   err instanceof Error ? err.message : fallback;
 
-/** Fetch one work order (or null on 404) — shared by the thunk and produce(). */
+/** Fetch one work order (or null on 404). */
 async function getOne(id) {
-  const response = await fetch(`${ENDPOINT}/${id}`);
-  if (response.status === 404) return null;
-  return handle(response);
+  try {
+    const { data } = await api.get(`/${id}`);
+    return data === '' || data === undefined ? null : data;
+  } catch (err) {
+    if (err.response?.status === 404) return null;
+    throw toApiError(err);
+  }
 }
 
 /**
@@ -68,7 +59,7 @@ export const fetchProductionOrders = createAsyncThunk(
   'production/fetchProductionOrders',
   async (_arg, { rejectWithValue }) => {
     try {
-      return await handle(await fetch(ENDPOINT));
+      return await runRequest(api.get(''));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to load'));
     }
@@ -90,13 +81,7 @@ export const createProductionOrder = createAsyncThunk(
   'production/createProductionOrder',
   async (draft, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(ENDPOINT, {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(toApiDraft(draft)),
-        }),
-      );
+      return await runRequest(api.post('', toApiDraft(draft)));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to save'));
     }
@@ -107,13 +92,7 @@ export const updateProductionOrder = createAsyncThunk(
   'production/updateProductionOrder',
   async ({ id, draft }, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(`${ENDPOINT}/${id}`, {
-          method: 'PUT',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(toApiDraft(draft)),
-        }),
-      );
+      return await runRequest(api.put(`/${id}`, toApiDraft(draft)));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to save'));
     }
@@ -124,7 +103,7 @@ export const removeProductionOrder = createAsyncThunk(
   'production/removeProductionOrder',
   async (id, { rejectWithValue }) => {
     try {
-      await handle(await fetch(`${ENDPOINT}/${id}`, { method: 'DELETE' }));
+      await runRequest(api.delete(`/${id}`));
       return id;
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to delete'));
@@ -142,13 +121,7 @@ export const produceProductionOrder = createAsyncThunk(
   'production/produceProductionOrder',
   async ({ id, qty }, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(`${ENDPOINT}/${id}/produce`, {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          body: JSON.stringify({ qty: Number(qty) || 0 }),
-        }),
-      );
+      return await runRequest(api.post(`/${id}/produce`, { qty: Number(qty) || 0 }));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Request failed'));
     }

@@ -117,7 +117,6 @@ export default function PurchaseOrderDetailPage() {
     return (
       <>
         <PageHeader
-          title="Purchase order"
           actions={
             <Button to="/purchase-orders" variant="secondary">
               <BackIcon /> Back to list
@@ -137,15 +136,6 @@ export default function PurchaseOrderDetailPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="row">
-            <span className="cell-mono" style={{ fontSize: 20 }}>
-              {order.poNo}
-            </span>
-            <Badge tone={status.tone}>{status.label}</Badge>
-          </span>
-        }
-        subtitle={`${order.supplierName} · created ${formatDateTime(order.createdAt)}`}
         actions={
           <>
             <Button to="/purchase-orders" variant="ghost">

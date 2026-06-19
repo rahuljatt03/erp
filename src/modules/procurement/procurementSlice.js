@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createApiClient, runRequest, toApiError } from '../../shared/api/client';
 
 /**
- * Purchase-order Redux slice — talks to the .NET ERP API directly.
+ * Purchase-order Redux slice — talks to the .NET ERP API directly via the shared axios client.
  *
  * Component → dispatch → slice (request) → state. Inventory side effects are
  * owned by the backend: creating/updating a PO or recording a receipt reconciles
@@ -12,21 +13,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
  * Set VITE_API_BASE_URL in a .env file to override the API origin.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080';
-const ENDPOINT = `${API_BASE}/api/purchase-orders`;
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
-
-/** Parse JSON if present; throw a helpful error on non-2xx responses. */
-async function handle(response) {
-  if (response.status === 204) return null;
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    const message = data?.title || data?.message || `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-  return data;
-}
+const api = createApiClient('/api/purchase-orders');
 
 const errMessage = (err, fallback) =>
   err instanceof Error ? err.message : fallback;
@@ -57,7 +44,7 @@ export const fetchPurchaseOrders = createAsyncThunk(
   'procurement/fetchPurchaseOrders',
   async (_arg, { rejectWithValue }) => {
     try {
-      return await handle(await fetch(ENDPOINT));
+      return await runRequest(api.get(''));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to load'));
     }
@@ -68,11 +55,11 @@ export const fetchPurchaseOrder = createAsyncThunk(
   'procurement/fetchPurchaseOrder',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${ENDPOINT}/${id}`);
-      if (response.status === 404) return null;
-      return await handle(response);
+      const { data } = await api.get(`/${id}`);
+      return data === '' || data === undefined ? null : data;
     } catch (err) {
-      return rejectWithValue(errMessage(err, 'Failed to load'));
+      if (err.response?.status === 404) return null;
+      return rejectWithValue(errMessage(toApiError(err), 'Failed to load'));
     }
   },
 );
@@ -81,13 +68,7 @@ export const createPurchaseOrder = createAsyncThunk(
   'procurement/createPurchaseOrder',
   async (draft, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(ENDPOINT, {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(toApiDraft(draft)),
-        }),
-      );
+      return await runRequest(api.post('', toApiDraft(draft)));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to save'));
     }
@@ -98,13 +79,7 @@ export const updatePurchaseOrder = createAsyncThunk(
   'procurement/updatePurchaseOrder',
   async ({ id, draft }, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(`${ENDPOINT}/${id}`, {
-          method: 'PUT',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(toApiDraft(draft)),
-        }),
-      );
+      return await runRequest(api.put(`/${id}`, toApiDraft(draft)));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to save'));
     }
@@ -115,7 +90,7 @@ export const removePurchaseOrder = createAsyncThunk(
   'procurement/removePurchaseOrder',
   async (id, { rejectWithValue }) => {
     try {
-      await handle(await fetch(`${ENDPOINT}/${id}`, { method: 'DELETE' }));
+      await runRequest(api.delete(`/${id}`));
       return id;
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to delete'));
@@ -137,13 +112,7 @@ export const receivePurchaseOrder = createAsyncThunk(
         .filter((r) => Number(r.qty) > 0)
         .map((r) => ({ itemId: r.itemId, qty: Number(r.qty) }));
 
-      return await handle(
-        await fetch(`${ENDPOINT}/${id}/receive`, {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(validReceipts),
-        }),
-      );
+      return await runRequest(api.post(`/${id}/receive`, validReceipts));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Request failed'));
     }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import PageHeader from '../../../shared/components/PageHeader';
 import Card from '../../../shared/components/Card';
+import PageHeader from '../../../shared/components/PageHeader';
 import Tabs from '../../../shared/components/Tabs';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import {
@@ -44,11 +44,7 @@ export default function InventoryPage() {
 
   return (
     <>
-      <PageHeader
-        title="Inventory"
-        subtitle="Current on-hand stock. Edit a quantity to update it — requirement analysis uses these numbers."
-      />
-
+      <PageHeader />
       {loading ? (
         <LoadingState label="Loading stock…" />
       ) : error ? (
@@ -73,7 +69,7 @@ export default function InventoryPage() {
                   <StockSection
                     items={finishedItems}
                     codeKey="sku"
-                    codeLabel="SKU"
+                    codeLabel="Code"
                     itemLabel="finished good"
                     title="Finished goods"
                     defaultUnit="pcs"

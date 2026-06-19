@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatNumber } from '../../../shared/utils/format';
-import { CheckIcon, DeleteIcon } from '../../../shared/components/icons';
+import { DeleteIcon } from '../../../shared/components/icons';
 import {
   Table,
   TableHeader,
@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 function StockRow({ item, codeKey, onSave, onDelete }) {
   const [value, setValue] = useState(String(item.onHand));
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -41,13 +40,10 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
   async function commit() {
     if (Number(value) === Number(item.onHand)) return;
     setSaving(true);
-    setSaved(false);
     try {
       await onSave(item.id, Number(value) || 0);
-      setSaved(true);
     } catch {
-      // The caller surfaces an error toast; keep the edited value for retry
-      // and don't flash the "saved" tick.
+      // The caller surfaces an error toast; keep the edited value for retry.
     } finally {
       setSaving(false);
     }
@@ -66,19 +62,13 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
             min="0"
             step="any"
             value={value}
-            onChange={(event) => {
-              setValue(event.target.value);
-              setSaved(false);
-            }}
+            onChange={(event) => setValue(event.target.value)}
             onBlur={commit}
             onKeyDown={(event) => {
               if (event.key === 'Enter') event.currentTarget.blur();
             }}
           />
           {saving ? <span className="text-muted-foreground text-sm">saving…</span> : null}
-          {saved && !saving ? (
-            <span className="text-green-600 text-sm"><CheckIcon size={13} /> saved</span>
-          ) : null}
         </div>
       </TableCell>
       <TableCell className="px-6 text-center">

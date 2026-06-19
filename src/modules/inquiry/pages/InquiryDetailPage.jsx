@@ -120,7 +120,6 @@ export default function InquiryDetailPage() {
     return (
       <>
         <PageHeader
-          title="Inquiry"
           actions={
             <Button to="/inquiries" variant="secondary">
               <BackIcon /> Back to list
@@ -139,15 +138,6 @@ export default function InquiryDetailPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="row">
-            <span className="cell-mono" style={{ fontSize: 20 }}>
-              {inquiry.inquiryNo}
-            </span>
-            <Badge tone={status.tone}>{status.label}</Badge>
-          </span>
-        }
-        subtitle={`Created by ${inquiry.createdBy} · ${formatDateTime(inquiry.createdAt)}`}
         actions={
           <>
             <Button to="/inquiries" variant="ghost">

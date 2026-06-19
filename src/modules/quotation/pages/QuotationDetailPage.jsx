@@ -111,7 +111,6 @@ export default function QuotationDetailPage() {
     return (
       <>
         <PageHeader
-          title="Quotation"
           actions={
             <Button to="/quotations" variant="secondary">
               <BackIcon /> Back to list
@@ -132,15 +131,6 @@ export default function QuotationDetailPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="row">
-            <span className="cell-mono" style={{ fontSize: 20 }}>
-              {quote.quoteNo}
-            </span>
-            <Badge tone={status.tone}>{status.label}</Badge>
-          </span>
-        }
-        subtitle={`${quote.customerName} · created ${formatDateTime(quote.createdAt)}`}
         actions={
           <>
             <Button to="/quotations" variant="ghost">
@@ -167,9 +157,6 @@ export default function QuotationDetailPage() {
             <Detail label="Customer">{quote.customerName}</Detail>
             <Detail label="Contact">{quote.customerContact || '—'}</Detail>
             <Detail label="Quote date">{formatDate(quote.quoteDate)}</Detail>
-            <Detail label="Valid until">
-              {quote.validUntil ? formatDate(quote.validUntil) : '—'}
-            </Detail>
             <Detail label="Quotation value">{formatNumber(quoteValue(quote))}</Detail>
           </div>
           {quote.notes ? (

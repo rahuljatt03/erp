@@ -11,9 +11,9 @@ import {
   CardContent,
 } from '@/components/ui/card';
 
-export default function Card({ title, actions, children, bodyFlush = false, className = '' }) {
+export default function Card({ title, actions, children, bodyFlush = false, className = '', ...rest }) {
   return (
-    <UiCard className={`gap-0 py-0 ${className}`.trim()}>
+    <UiCard className={`gap-0 py-0 ${className}`.trim()} {...rest}>
       {(title || actions) && (
         <CardHeader className="border-b py-4">
           {title ? <CardTitle className="text-base">{title}</CardTitle> : <span />}

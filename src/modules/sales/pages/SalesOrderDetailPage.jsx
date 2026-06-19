@@ -72,7 +72,6 @@ export default function SalesOrderDetailPage() {
     return (
       <>
         <PageHeader
-          title="Sales order"
           actions={
             <Button to="/sales-orders" variant="secondary">
               <BackIcon /> Back to list
@@ -90,15 +89,6 @@ export default function SalesOrderDetailPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="row">
-            <span className="cell-mono" style={{ fontSize: 20 }}>
-              {order.soNo}
-            </span>
-            <Badge tone={status.tone}>{status.label}</Badge>
-          </span>
-        }
-        subtitle={`${order.customerName} · created ${formatDateTime(order.createdAt)}`}
         actions={
           <>
             <Button to="/sales-orders" variant="ghost">

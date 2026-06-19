@@ -104,7 +104,6 @@ export default function ProductionOrderDetailPage() {
     return (
       <>
         <PageHeader
-          title="Work order"
           actions={
             <Button to="/production" variant="secondary">
               <BackIcon /> Back to list
@@ -124,15 +123,6 @@ export default function ProductionOrderDetailPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="row">
-            <span className="cell-mono" style={{ fontSize: 20 }}>
-              {order.woNo}
-            </span>
-            <Badge tone={status.tone}>{status.label}</Badge>
-          </span>
-        }
-        subtitle={`${order.productName} · created ${formatDateTime(order.createdAt)}`}
         actions={
           <>
             <Button to="/production" variant="ghost">
@@ -235,14 +225,11 @@ export default function ProductionOrderDetailPage() {
                   style={{ width: 120, textAlign: 'right' }}
                   type="number"
                   min="0"
-                  max={progress.outstanding}
                   step="any"
                   value={qty}
                   onChange={(event) => setQty(event.target.value)}
                 />
-                <span className="text-sm muted">
-                  {order.unit} (max {formatNumber(progress.outstanding)})
-                </span>
+                <span className="text-sm muted">{order.unit}</span>
               </div>
               <Button variant="primary" onClick={handleProduce} disabled={producing}>
                 {producing ? 'Producing…' : (<><ProductionIcon /> Report production</>)}

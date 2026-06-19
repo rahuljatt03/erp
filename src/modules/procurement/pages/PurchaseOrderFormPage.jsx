@@ -160,7 +160,6 @@ export default function PurchaseOrderFormPage() {
   if (loadError)
     return (
       <>
-        <PageHeader title="Edit purchase order" />
         <Card>
           <ErrorState text={loadError} />
         </Card>
@@ -172,8 +171,6 @@ export default function PurchaseOrderFormPage() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
-        title={mode === 'edit' ? 'Edit purchase order' : 'New purchase order'}
-        subtitle="Order raw materials from a supplier. Receiving adds stock to inventory."
         actions={
           <>
             <Button to={cancelTo} variant="ghost">
@@ -236,7 +233,6 @@ export default function PurchaseOrderFormPage() {
                 onChange={(event) => setField('expectedDate', event.target.value)}
               />
             </Field>
-            <div aria-hidden="true" />
             <Field label="Status">
               <select
                 className="select"

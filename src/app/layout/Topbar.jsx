@@ -1,11 +1,6 @@
-import { useLocation } from 'react-router-dom';
-import { findActiveNav } from '../navigation';
-import { currentUser, company } from '../../shared/session';
+import { currentUser } from '../../shared/session';
 
 export default function Topbar({ onToggleSidebar, sidebarCollapsed }) {
-  const { pathname } = useLocation();
-  const active = findActiveNav(pathname);
-
   return (
     <header className="topbar">
       <div className="topbar__crumbs">
@@ -21,13 +16,6 @@ export default function Topbar({ onToggleSidebar, sidebarCollapsed }) {
           <span />
           <span />
         </button>
-        {company.name}
-        {active ? (
-          <>
-            {' '}
-            / <strong>{active.label}</strong>
-          </>
-        ) : null}
       </div>
 
       <div className="topbar__user">

@@ -150,7 +150,6 @@ export default function InquiryFormPage() {
   if (loadError) {
     return (
       <>
-        <PageHeader title="Edit inquiry" />
         <Card>
           <ErrorState text={loadError} />
         </Card>
@@ -163,8 +162,6 @@ export default function InquiryFormPage() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
-        title={mode === 'edit' ? 'Edit inquiry' : 'New inquiry'}
-        subtitle="Capture what the customer wants to order and the raw materials each product needs."
         actions={
           <>
             <Button to={cancelTo} variant="ghost">

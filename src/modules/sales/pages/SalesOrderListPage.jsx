@@ -83,8 +83,6 @@ export default function SalesOrderListPage() {
   return (
     <>
       <PageHeader
-        title="Sales Orders"
-        subtitle="Confirmed customer orders. Convert an inquiry, or create one directly."
         actions={
           <Button variant="primary" to="/sales-orders/new">
             <AddIcon /> New Sales Order

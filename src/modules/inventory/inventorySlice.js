@@ -1,14 +1,19 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { finishedGoodsService, rawMaterialsService } from './inventory.service';
+import { createApiClient, runRequest } from '../../shared/api/client';
 
 /**
  * Inventory Redux slice — holds two stock lists (finished goods + raw materials)
  * under one `inventory` key. Each has its own loading/error status. Mutations
- * (create / set on-hand) are thunks; the page refetches the affected list after.
+ * (create / remove / set on-hand) are thunks; the page refetches the affected
+ * list after. Talks to the .NET ERP API directly via the shared axios client —
+ * there's no separate service layer.
  *
- * produce/receive/consume live on the services and are driven by the production
- * and procurement modules, so they aren't exposed here as thunks.
+ * Stock side effects from production (produce/consume) and procurement (receive)
+ * are owned by the backend now, so they aren't exposed here.
  */
+
+const fgApi = createApiClient('/api/inventory/finished-goods');
+const rmApi = createApiClient('/api/inventory/raw-materials');
 
 const errMessage = (err) => (err instanceof Error ? err.message : 'Inventory request failed');
 
@@ -16,7 +21,7 @@ export const fetchFinishedGoods = createAsyncThunk(
   'inventory/fetchFinishedGoods',
   async (_arg, { rejectWithValue }) => {
     try {
-      return await finishedGoodsService.list();
+      return await runRequest(fgApi.get(''));
     } catch (err) {
       return rejectWithValue(errMessage(err));
     }
@@ -27,7 +32,7 @@ export const fetchRawMaterials = createAsyncThunk(
   'inventory/fetchRawMaterials',
   async (_arg, { rejectWithValue }) => {
     try {
-      return await rawMaterialsService.list();
+      return await runRequest(rmApi.get(''));
     } catch (err) {
       return rejectWithValue(errMessage(err));
     }
@@ -36,32 +41,36 @@ export const fetchRawMaterials = createAsyncThunk(
 
 export const createFinishedGood = createAsyncThunk(
   'inventory/createFinishedGood',
-  (draft) => finishedGoodsService.create(draft),
+  ({ sku, name, unit, onHand }) =>
+    runRequest(fgApi.post('', { sku, name, unit, onHand: Number(onHand) || 0 })),
 );
 
 export const removeFinishedGood = createAsyncThunk(
   'inventory/removeFinishedGood',
-  (id) => finishedGoodsService.remove(id),
+  (id) => runRequest(fgApi.delete(`/${id}`)),
 );
 
 export const setFinishedGoodOnHand = createAsyncThunk(
   'inventory/setFinishedGoodOnHand',
-  ({ id, onHand }) => finishedGoodsService.setOnHand(id, onHand),
+  ({ id, onHand }) =>
+    runRequest(fgApi.patch(`/${id}/on-hand`, { onHand: Number(onHand) || 0 })),
 );
 
 export const createRawMaterial = createAsyncThunk(
   'inventory/createRawMaterial',
-  (draft) => rawMaterialsService.create(draft),
+  ({ code, name, unit, onHand }) =>
+    runRequest(rmApi.post('', { code, name, unit, onHand: Number(onHand) || 0 })),
 );
 
 export const removeRawMaterial = createAsyncThunk(
   'inventory/removeRawMaterial',
-  (id) => rawMaterialsService.remove(id),
+  (id) => runRequest(rmApi.delete(`/${id}`)),
 );
 
 export const setRawMaterialOnHand = createAsyncThunk(
   'inventory/setRawMaterialOnHand',
-  ({ id, onHand }) => rawMaterialsService.setOnHand(id, onHand),
+  ({ id, onHand }) =>
+    runRequest(rmApi.patch(`/${id}/on-hand`, { onHand: Number(onHand) || 0 })),
 );
 
 const blankStock = () => ({ items: [], status: 'idle', error: null });

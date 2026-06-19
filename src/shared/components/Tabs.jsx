@@ -6,14 +6,17 @@ import { useState } from 'react';
  * @param {object} props
  * @param {Array<{ key: string, label: React.ReactNode, badge?: React.ReactNode, content: React.ReactNode }>} props.tabs
  * @param {string} [props.initialKey]
+ * @param {React.ReactNode} [props.leading] Rendered at the start of the tab bar,
+ *   before the tabs (e.g. a drag-handle grip when the bar doubles as a header).
  */
-export default function Tabs({ tabs, initialKey }) {
+export default function Tabs({ tabs, initialKey, leading }) {
   const [active, setActive] = useState(initialKey ?? tabs[0]?.key);
   const current = tabs.find((tab) => tab.key === active) ?? tabs[0];
 
   return (
     <div>
       <div className="tabs" role="tablist">
+        {leading != null ? <span className="tabs__lead">{leading}</span> : null}
         {tabs.map((tab) => (
           <button
             key={tab.key}

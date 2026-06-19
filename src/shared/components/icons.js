@@ -23,6 +23,8 @@ export {
   Boxes as FinishedGoodsIcon,
   Layers as RawMaterialIcon,
   BarChart3 as AnalysisIcon,
+  Users as CustomersIcon,
+  TrendingUp as GrowthIcon,
 
   // ---- Actions ----
   ArrowLeft as BackIcon,
@@ -33,6 +35,12 @@ export {
   PackageCheck as ReceiveIcon,
   Link2 as LinkIcon,
   Download as DownloadIcon,
+  SlidersHorizontal as ManageWidgetsIcon,
+  GripVertical as DragHandleIcon,
+  Calendar as CalendarIcon,
+  ChevronDown as ChevronDownIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
 
   // ---- Feedback / status ----
   CircleCheck as SuccessIcon,

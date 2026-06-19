@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../shared/components/PageHeader";
 import Button from "../../../shared/components/Button";
 import Card from "../../../shared/components/Card";
-import Badge from "../../../shared/components/Badge";
+import StatusSelect from "../../../shared/components/StatusSelect";
 import {
   LoadingState,
   EmptyState,
@@ -14,16 +14,19 @@ import { AddIcon, InquiryIcon } from "../../../shared/components/icons";
 import { formatDate } from "../../../shared/utils/format";
 import {
   fetchInquiries,
+  setInquiryStatus,
   selectInquiries,
   selectInquiriesError,
   selectInquiriesLoading,
 } from "../inquirySlice";
-import { getStatusMeta } from "../inquiry.constants";
+import { INQUIRY_STATUSES } from "../inquiry.constants";
 import {
   summariseProducts,
   countItems,
   earliestDelivery,
 } from "../inquiry.helpers";
+import { useToast } from "../../../shared/feedback/FeedbackProvider";
+import { confirm, statusNeedsConfirm } from "../../../shared/feedback/confirm";
 
 export default function InquiryListPage() {
   const dispatch = useDispatch();
@@ -31,16 +34,46 @@ export default function InquiryListPage() {
   const loading = useSelector(selectInquiriesLoading);
   const error = useSelector(selectInquiriesError);
   const navigate = useNavigate();
+  const toast = useToast();
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     dispatch(fetchInquiries());
   }, [dispatch]);
 
+  // Inline status change from the list. Uses the dedicated PATCH status thunk
+  // (no need to round-trip the whole inquiry), then refreshes the list.
+  async function updateStatus(id, status) {
+    const inquiry = inquiries.find((i) => i.id === id);
+    if (!inquiry) return;
+    const label =
+      INQUIRY_STATUSES.find((s) => s.value === status)?.label ?? status;
+    if (statusNeedsConfirm(status)) {
+      const ok = await confirm({
+        message: `Mark ${inquiry.inquiryNo} as “${label}”?`,
+        header: "Change status?",
+        acceptLabel: "Change",
+      });
+      if (!ok) return;
+    }
+    setSavingId(id);
+    try {
+      await dispatch(setInquiryStatus({ id, status })).unwrap();
+      await dispatch(fetchInquiries());
+      toast.success("Status updated", `${inquiry.inquiryNo} → ${label}.`);
+    } catch (err) {
+      toast.error(
+        "Update failed",
+        err instanceof Error ? err.message : "Could not update status.",
+      );
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   return (
     <>
       <PageHeader
-        title="Inquiries"
-        subtitle="Customer order inquiries — products, quantities, delivery dates and required raw materials."
         actions={
           <Button variant="primary" to="/inquiries/new">
             <AddIcon /> New Inquiry
@@ -81,7 +114,6 @@ export default function InquiryListPage() {
               <tbody>
                 {inquiries.map((inquiry) => {
                   const earliest = earliestDelivery(inquiry);
-                  const status = getStatusMeta(inquiry.status);
                   return (
                     <tr
                       key={inquiry.id}
@@ -94,8 +126,13 @@ export default function InquiryListPage() {
                       <td>{summariseProducts(inquiry)}</td>
                       <td className="num">{countItems(inquiry)}</td>
                       <td>{earliest ? formatDate(earliest) : "—"}</td>
-                      <td>
-                        <Badge tone={status.tone}>{status.label}</Badge>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <StatusSelect
+                          value={inquiry.status}
+                          options={INQUIRY_STATUSES}
+                          disabled={savingId === inquiry.id}
+                          onChange={(next) => updateStatus(inquiry.id, next)}
+                        />
                       </td>
                     </tr>
                   );

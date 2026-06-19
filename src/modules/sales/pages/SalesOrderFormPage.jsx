@@ -145,7 +145,6 @@ export default function SalesOrderFormPage() {
   if (loadError)
     return (
       <>
-        <PageHeader title="Edit sales order" />
         <Card>
           <ErrorState text={loadError} />
         </Card>
@@ -157,8 +156,6 @@ export default function SalesOrderFormPage() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
-        title={mode === 'edit' ? 'Edit sales order' : 'New sales order'}
-        subtitle="Confirm what the customer is ordering and the agreed pricing."
         actions={
           <>
             <Button to={cancelTo} variant="ghost">

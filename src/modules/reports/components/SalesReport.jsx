@@ -47,11 +47,6 @@ export default function SalesReport({ inquiries, quotes, orders, range }) {
             value: formatNumber(s.quoteCount),
             meta: `${formatNumber(s.quoteValue)} quoted`,
           },
-          {
-            label: 'Quote win rate',
-            value: s.winRate == null ? '—' : `${s.winRate}%`,
-            meta: `${formatNumber(s.inquiryCount)} inquiries received`,
-          },
         ]}
       />
 

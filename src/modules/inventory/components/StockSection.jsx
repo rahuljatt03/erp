@@ -116,7 +116,7 @@ export default function StockSection({
               className="input"
               value={draft.code}
               onChange={set('code')}
-              placeholder={codeLabel === 'SKU' ? 'e.g. PH-450' : 'e.g. CI-FG260'}
+              placeholder={codeKey === 'sku' ? 'e.g. PH-450' : 'e.g. CI-FG260'}
             />
           </Field>
           <Field label="Name" required htmlFor={`${formId}-name`} error={nameError}>

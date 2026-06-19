@@ -36,8 +36,6 @@ export default function ProductionOrderListPage() {
   return (
     <>
       <PageHeader
-        title="Production"
-        subtitle="Work orders. Completing one consumes raw materials and adds finished goods to inventory."
         actions={
           <Button variant="primary" to="/production/new">
             <AddIcon /> New Work Order

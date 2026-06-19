@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import PageHeader from '../../../shared/components/PageHeader';
 import Card from '../../../shared/components/Card';
+import PageHeader from '../../../shared/components/PageHeader';
 import Tabs from '../../../shared/components/Tabs';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import {
@@ -128,11 +128,7 @@ export default function ReportsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Reports"
-        subtitle="Analytics across sales, production, procurement and inventory"
-      />
-
+      <PageHeader />
       {loading ? (
         <LoadingState label="Loading reports…" />
       ) : error ? (

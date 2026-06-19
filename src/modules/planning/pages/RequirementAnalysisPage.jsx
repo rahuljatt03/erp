@@ -47,7 +47,6 @@ export default function RequirementAnalysisPage() {
     return (
       <>
         <PageHeader
-          title="Requirement analysis"
           actions={
             <Button to="/inquiries" variant="secondary">
               <BackIcon /> Back to inquiries
@@ -133,16 +132,6 @@ export default function RequirementAnalysisPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="row">
-            Requirement analysis
-            <span className="cell-mono" style={{ fontSize: 16 }}>
-              {inquiry.inquiryNo}
-            </span>
-            <Badge tone={status.tone}>{status.label}</Badge>
-          </span>
-        }
-        subtitle={`${inquiry.customerName} — what to build, and what to purchase to build it.`}
         actions={
           <>
             <Button to={`/inquiries/${inquiry.id}`} variant="ghost">

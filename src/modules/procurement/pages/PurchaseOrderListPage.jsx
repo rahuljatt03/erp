@@ -72,8 +72,6 @@ export default function PurchaseOrderListPage() {
   return (
     <>
       <PageHeader
-        title="Purchase Orders"
-        subtitle="Raw-material procurement. Receiving an order adds the quantity to inventory."
         actions={
           <Button variant="primary" to="/purchase-orders/new">
             <AddIcon /> New Purchase Order

@@ -1,31 +1,19 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { inquiryService } from '../inquiry/inquiry.service';
+import { createApiClient, runRequest, toApiError } from '../../shared/api/client';
+import { setInquiryStatus } from '../inquiry/inquirySlice';
 
 /**
- * Sales-order Redux slice — talks to the .NET ERP API directly.
+ * Sales-order Redux slice — talks to the .NET ERP API directly via the shared axios client.
  *
  * Component → dispatch → slice (request) → state. Creating an order from an
  * inquiry marks that inquiry "converted" — the one cross-module side effect,
- * done here via the shared inquiry client. Registered under the `sales` key.
+ * done here by dispatching the inquiry slice's `setInquiryStatus` thunk.
+ * Registered under the `sales` key.
  *
  * Set VITE_API_BASE_URL in a .env file to override the API origin.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080';
-const ENDPOINT = `${API_BASE}/api/sales-orders`;
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
-
-/** Parse JSON if present; throw a helpful error on non-2xx responses. */
-async function handle(response) {
-  if (response.status === 204) return null;
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    const message = data?.title || data?.message || `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-  return data;
-}
+const api = createApiClient('/api/sales-orders');
 
 const errMessage = (err, fallback) =>
   err instanceof Error ? err.message : fallback;
@@ -36,7 +24,7 @@ export const fetchSalesOrders = createAsyncThunk(
   'sales/fetchSalesOrders',
   async (_arg, { rejectWithValue }) => {
     try {
-      return await handle(await fetch(ENDPOINT));
+      return await runRequest(api.get(''));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to load'));
     }
@@ -47,31 +35,27 @@ export const fetchSalesOrder = createAsyncThunk(
   'sales/fetchSalesOrder',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${ENDPOINT}/${id}`);
-      if (response.status === 404) return null;
-      return await handle(response);
+      const { data } = await api.get(`/${id}`);
+      return data === '' || data === undefined ? null : data;
     } catch (err) {
-      return rejectWithValue(errMessage(err, 'Failed to load'));
+      if (err.response?.status === 404) return null;
+      return rejectWithValue(errMessage(toApiError(err), 'Failed to load'));
     }
   },
 );
 
 export const createSalesOrder = createAsyncThunk(
   'sales/createSalesOrder',
-  async (draft, { rejectWithValue }) => {
+  async (draft, { dispatch, rejectWithValue }) => {
     try {
-      const inserted = await handle(
-        await fetch(ENDPOINT, {
-          method: 'POST',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(draft),
-        }),
-      );
+      const inserted = await runRequest(api.post('', draft));
 
       // Converting an inquiry marks it as "converted" (non-fatal if it fails).
       if (inserted?.sourceInquiryId) {
         try {
-          await inquiryService.setStatus(inserted.sourceInquiryId, 'converted');
+          await dispatch(
+            setInquiryStatus({ id: inserted.sourceInquiryId, status: 'converted' }),
+          ).unwrap();
         } catch {
           // The sales order is still created even if the inquiry update fails.
         }
@@ -87,13 +71,7 @@ export const updateSalesOrder = createAsyncThunk(
   'sales/updateSalesOrder',
   async ({ id, draft }, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(`${ENDPOINT}/${id}`, {
-          method: 'PUT',
-          headers: JSON_HEADERS,
-          body: JSON.stringify(draft),
-        }),
-      );
+      return await runRequest(api.put(`/${id}`, draft));
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to save'));
     }
@@ -104,7 +82,7 @@ export const removeSalesOrder = createAsyncThunk(
   'sales/removeSalesOrder',
   async (id, { rejectWithValue }) => {
     try {
-      await handle(await fetch(`${ENDPOINT}/${id}`, { method: 'DELETE' }));
+      await runRequest(api.delete(`/${id}`));
       return id;
     } catch (err) {
       return rejectWithValue(errMessage(err, 'Failed to delete'));

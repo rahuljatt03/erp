@@ -119,7 +119,6 @@ export default function ProductionOrderFormPage() {
   if (loadError)
     return (
       <>
-        <PageHeader title="Edit work order" />
         <Card>
           <ErrorState text={loadError} />
         </Card>
@@ -131,8 +130,6 @@ export default function ProductionOrderFormPage() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
-        title={mode === 'edit' ? 'Edit work order' : 'New work order'}
-        subtitle="Plan a production run. Completing it consumes materials and produces finished goods."
         actions={
           <>
             <Button to={cancelTo} variant="ghost">

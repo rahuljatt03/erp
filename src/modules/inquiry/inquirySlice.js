@@ -1,32 +1,18 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createApiClient, runRequest, toApiError } from "../../shared/api/client";
 
 /**
- * Inquiry Redux slice — talks to the .NET ERP API directly.
- *
- * Each thunk makes its own `fetch` request and returns the response to the
- * component (via `dispatch(...).unwrap()`). There's no service or factory layer:
- * component → dispatch → slice (request) → state. Registered under the `inquiry`
- * key in the store.
+ * Inquiry Redux slice — talks to the .NET ERP API directly via the shared axios
+ * client. Each thunk issues one request and returns the response to the
+ * component (via `dispatch(...).unwrap()`). There's no separate service layer:
+ * component → dispatch → slice (axios) → state. Registered under the `inquiry`
+ * key in the store. Other modules (sales/quotation) reuse `setInquiryStatus`
+ * here to flip an inquiry's status when converting it.
  *
  * Set VITE_API_BASE_URL in a .env file to override the API origin.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5080";
-const ENDPOINT = `${API_BASE}/api/inquiries`;
-const JSON_HEADERS = { "Content-Type": "application/json" };
-
-/** Parse JSON if present; throw a helpful error on non-2xx responses. */
-async function handle(response) {
-  if (response.status === 204) return null;
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) {
-    const message =
-      data?.title || data?.message || `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-  return data;
-}
+const api = createApiClient("/api/inquiries");
 
 const errMessage = (err, fallback) =>
   err instanceof Error ? err.message : fallback;
@@ -37,7 +23,7 @@ export const fetchInquiries = createAsyncThunk(
   "inquiry/fetchInquiries",
   async (_arg, { rejectWithValue }) => {
     try {
-      return await handle(await fetch(ENDPOINT));
+      return await runRequest(api.get(""));
     } catch (err) {
       return rejectWithValue(errMessage(err, "Failed to load"));
     }
@@ -48,11 +34,11 @@ export const fetchInquiry = createAsyncThunk(
   "inquiry/fetchInquiry",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${ENDPOINT}/${id}`);
-      if (response.status === 404) return null;
-      return await handle(response);
+      const { data } = await api.get(`/${id}`);
+      return data === "" || data === undefined ? null : data;
     } catch (err) {
-      return rejectWithValue(errMessage(err, "Failed to load"));
+      if (err.response?.status === 404) return null;
+      return rejectWithValue(errMessage(toApiError(err), "Failed to load"));
     }
   },
 );
@@ -61,13 +47,7 @@ export const createInquiry = createAsyncThunk(
   "inquiry/createInquiry",
   async (draft, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(ENDPOINT, {
-          method: "POST",
-          headers: JSON_HEADERS,
-          body: JSON.stringify(draft),
-        }),
-      );
+      return await runRequest(api.post("", draft));
     } catch (err) {
       return rejectWithValue(errMessage(err, "Failed to save"));
     }
@@ -78,13 +58,7 @@ export const updateInquiry = createAsyncThunk(
   "inquiry/updateInquiry",
   async ({ id, draft }, { rejectWithValue }) => {
     try {
-      return await handle(
-        await fetch(`${ENDPOINT}/${id}`, {
-          method: "PUT",
-          headers: JSON_HEADERS,
-          body: JSON.stringify(draft),
-        }),
-      );
+      return await runRequest(api.put(`/${id}`, draft));
     } catch (err) {
       return rejectWithValue(errMessage(err, "Failed to save"));
     }
@@ -95,10 +69,25 @@ export const removeInquiry = createAsyncThunk(
   "inquiry/removeInquiry",
   async (id, { rejectWithValue }) => {
     try {
-      await handle(await fetch(`${ENDPOINT}/${id}`, { method: "DELETE" }));
+      await runRequest(api.delete(`/${id}`));
       return id;
     } catch (err) {
       return rejectWithValue(errMessage(err, "Failed to delete"));
+    }
+  },
+);
+
+/**
+ * Lightweight status update — used cross-module (sales/quotation dispatch this
+ * to mark a source inquiry "converted"/"quoted" when converting it).
+ */
+export const setInquiryStatus = createAsyncThunk(
+  "inquiry/setInquiryStatus",
+  async ({ id, status }, { rejectWithValue }) => {
+    try {
+      return await runRequest(api.patch(`/${id}/status`, { status }));
+    } catch (err) {
+      return rejectWithValue(errMessage(err, "Failed to update status"));
     }
   },
 );

@@ -148,7 +148,6 @@ export default function QuotationFormPage() {
   if (loadError)
     return (
       <>
-        <PageHeader title="Edit quotation" />
         <Card>
           <ErrorState text={loadError} />
         </Card>
@@ -160,8 +159,6 @@ export default function QuotationFormPage() {
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
       <PageHeader
-        title={mode === 'edit' ? 'Edit quotation' : 'New quotation'}
-        subtitle="Offer the customer a price for the products they asked about."
         actions={
           <>
             <Button to={cancelTo} variant="ghost">

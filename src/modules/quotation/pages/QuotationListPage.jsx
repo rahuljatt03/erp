@@ -74,8 +74,6 @@ export default function QuotationListPage() {
   return (
     <>
       <PageHeader
-        title="Quotations"
-        subtitle="Priced offers to customers. Quote an inquiry, or create one directly."
         actions={
           <Button variant="primary" to="/quotations/new">
             <AddIcon /> New Quotation
@@ -107,7 +105,6 @@ export default function QuotationListPage() {
                   <th>Quote No.</th>
                   <th>Customer</th>
                   <th>Quote date</th>
-                  <th>Valid until</th>
                   <th className="num">Value</th>
                   <th>Status</th>
                 </tr>
@@ -123,13 +120,6 @@ export default function QuotationListPage() {
                       <td className="cell-mono">{quote.quoteNo}</td>
                       <td className="cell-strong">{quote.customerName}</td>
                       <td>{formatDate(quote.quoteDate)}</td>
-                      <td>
-                        {quote.validUntil ? (
-                          formatDate(quote.validUntil)
-                        ) : (
-                          <span className="muted">—</span>
-                        )}
-                      </td>
                       <td className="num">{formatNumber(quoteValue(quote))}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
