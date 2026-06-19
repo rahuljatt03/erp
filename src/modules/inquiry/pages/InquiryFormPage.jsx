@@ -161,18 +161,7 @@ export default function InquiryFormPage() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
-      <PageHeader
-        actions={
-          <>
-            <Button to={cancelTo} variant="ghost">
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={saving}>
-              {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create inquiry'}
-            </Button>
-          </>
-        }
-      />
+      <PageHeader />
 
       {errors.form ? (
         <div className="banner banner--error" style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}>

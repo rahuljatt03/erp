@@ -155,18 +155,7 @@ export default function SalesOrderFormPage() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} noValidate>
-      <PageHeader
-        actions={
-          <>
-            <Button to={cancelTo} variant="ghost">
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={saving}>
-              {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Create order'}
-            </Button>
-          </>
-        }
-      />
+      <PageHeader />
 
       {draft.sourceInquiryNo ? (
         <div className="banner" style={{ marginBottom: 18 }}>
