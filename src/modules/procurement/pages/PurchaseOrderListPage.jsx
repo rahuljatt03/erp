@@ -115,7 +115,7 @@ export default function PurchaseOrderListPage() {
                   <th>Order date</th>
                   <th className="num">Lines</th>
                   <th className="num">Value</th>
-                  <th>Status</th>
+                  <th style={{ paddingLeft: 40 }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -131,7 +131,7 @@ export default function PurchaseOrderListPage() {
                       <td>{formatDate(po.orderDate)}</td>
                       <td className="num">{po.items.length}</td>
                       <td className="num">{formatNumber(poValue(po))}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
+                      <td style={{ paddingLeft: 40 }} onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
                           value={po.status}
                           options={PO_STATUSES}
