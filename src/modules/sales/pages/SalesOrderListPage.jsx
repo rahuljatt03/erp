@@ -107,14 +107,14 @@ export default function SalesOrderListPage() {
             }
           />
         ) : (
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>SO No.</th>
                   <th>Customer</th>
                   <th>Order date</th>
-                  <th className="num">Value</th>
+                  <th className="!text-right">Value</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -123,13 +123,13 @@ export default function SalesOrderListPage() {
                   return (
                     <tr
                       key={so.id}
-                      className="is-clickable"
+                      className="cursor-pointer hover:bg-indigo-50"
                       onClick={() => navigate(`/sales-orders/${so.id}`)}
                     >
-                      <td className="cell-mono">{so.soNo}</td>
-                      <td className="cell-strong">{so.customerName}</td>
+                      <td className="!font-mono !text-[13px] !text-indigo-700">{so.soNo}</td>
+                      <td className="!font-semibold !text-slate-900">{so.customerName}</td>
                       <td>{formatDate(so.orderDate)}</td>
-                      <td className="num">{formatNumber(soValue(so))}</td>
+                      <td className="!text-right tabular-nums">{formatNumber(soValue(so))}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
                           value={so.status}

@@ -1,6 +1,7 @@
 using ERP_API.Dtos;
 using ERP_API.Interfaces;
 using ERP_API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ERP_API.Controllers;
@@ -11,6 +12,7 @@ namespace ERP_API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/sales-orders")]
+[Authorize]
 public class SalesOrdersController : ControllerBase
 {
     private readonly ISalesOrderService _service;

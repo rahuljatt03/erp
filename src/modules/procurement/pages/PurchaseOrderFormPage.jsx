@@ -5,6 +5,9 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
+import Textarea from '../../../shared/components/Textarea';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createId } from '../../../shared/utils/id';
 import { createPurchaseOrder, fetchPurchaseOrder, updatePurchaseOrder } from '../procurementSlice';
@@ -177,27 +180,24 @@ export default function PurchaseOrderFormPage() {
       <PageHeader />
 
       {draft.sourceInquiryNo ? (
-        <div className="banner" style={{ marginBottom: 18 }}>
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-blue-200 bg-blue-100 px-4 py-3 text-[13.5px] text-blue-800">
           <LinkIcon size={16} /> Prefilled from the requirement analysis of <strong>&nbsp;{draft.sourceInquiryNo}</strong>.
           Review quantities and set the supplier before saving.
         </div>
       ) : null}
 
       {errors.form ? (
-        <div
-          className="banner banner--error"
-          style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
-        >
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-red-200 bg-red-100 px-4 py-3 text-[13.5px] text-red-600">
           {errors.form}
         </div>
       ) : null}
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Supplier & order details">
-          <div className="form-grid">
+          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-5 sm:grid-cols-2">
             <Field label="Supplier name" required error={errors.fields.supplierName}>
-              <input
-                className={`input ${errors.fields.supplierName ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.supplierName)}
                 placeholder="e.g. Meridian Metals Supply"
                 value={draft.supplierName}
                 onChange={(event) => setField('supplierName', event.target.value)}
@@ -215,24 +215,22 @@ export default function PurchaseOrderFormPage() {
               />
             </Field>
             <Field label="Order date" required error={errors.fields.orderDate}>
-              <input
-                className={`input ${errors.fields.orderDate ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.orderDate)}
                 type="date"
                 value={draft.orderDate}
                 onChange={(event) => setField('orderDate', event.target.value)}
               />
             </Field>
             <Field label="Expected delivery" hint="Optional">
-              <input
-                className="input"
+              <Input
                 type="date"
                 value={draft.expectedDate}
                 onChange={(event) => setField('expectedDate', event.target.value)}
               />
             </Field>
             <Field label="Status">
-              <select
-                className="select"
+              <Select
                 value={draft.status}
                 onChange={(event) => setField('status', event.target.value)}
               >
@@ -241,7 +239,7 @@ export default function PurchaseOrderFormPage() {
                     {status.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           </div>
         </Card>
@@ -255,16 +253,16 @@ export default function PurchaseOrderFormPage() {
           }
           bodyFlush
         >
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Material</th>
                   <th>Code</th>
-                  <th className="num">Quantity</th>
+                  <th className="!text-right">Quantity</th>
                   <th>Unit</th>
-                  <th className="num">Unit price</th>
-                  <th className="num">Line total</th>
+                  <th className="!text-right">Unit price</th>
+                  <th className="!text-right">Line total</th>
                   <th />
                 </tr>
               </thead>
@@ -274,26 +272,24 @@ export default function PurchaseOrderFormPage() {
                   return (
                     <tr key={item.id}>
                       <td>
-                        <input
-                          className="input"
+                        <Input
                           placeholder="Material name"
                           value={item.materialName}
                           onChange={(event) => setItem(item.id, { materialName: event.target.value })}
                         />
                       </td>
                       <td>
-                        <input
-                          className="input"
-                          style={{ width: 110 }}
+                        <Input
+                          className="w-[110px]"
                           placeholder="Code"
                           value={item.materialCode}
                           onChange={(event) => setItem(item.id, { materialCode: event.target.value })}
                         />
                       </td>
-                      <td className="num">
-                        <input
-                          className={`input ${itemErr.quantity ? 'has-error' : ''}`}
-                          style={{ width: 100, textAlign: 'right' }}
+                      <td className="!text-right tabular-nums">
+                        <Input
+                          invalid={Boolean(itemErr.quantity)}
+                          className="w-[100px] text-right"
                           type="number"
                           min="0"
                           step="any"
@@ -302,9 +298,8 @@ export default function PurchaseOrderFormPage() {
                         />
                       </td>
                       <td>
-                        <select
-                          className="select"
-                          style={{ width: 90 }}
+                        <Select
+                          className="w-[90px]"
                           value={item.unit}
                           onChange={(event) => setItem(item.id, { unit: event.target.value })}
                         >
@@ -313,12 +308,11 @@ export default function PurchaseOrderFormPage() {
                               {unit}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </td>
-                      <td className="num">
-                        <input
-                          className="input"
-                          style={{ width: 110, textAlign: 'right' }}
+                      <td className="!text-right tabular-nums">
+                        <Input
+                          className="w-[110px] text-right"
                           type="number"
                           min="0"
                           step="any"
@@ -326,19 +320,20 @@ export default function PurchaseOrderFormPage() {
                           onChange={(event) => setItem(item.id, { unitPrice: event.target.value })}
                         />
                       </td>
-                      <td className="num cell-strong">
+                      <td className="!text-right tabular-nums !font-semibold !text-slate-900">
                         {formatNumber((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
                       </td>
-                      <td className="num">
-                        <button
+                      <td className="!text-right tabular-nums">
+                        <Button
                           type="button"
-                          className="btn btn-ghost btn-icon"
+                          variant="ghost"
+                          size="sm"
                           title="Remove line"
                           onClick={() => removeItem(item.id)}
                           disabled={draft.items.length === 1}
                         >
                           <RemoveIcon />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -346,10 +341,10 @@ export default function PurchaseOrderFormPage() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={5} className="num cell-strong">
+                  <td colSpan={5} className="!text-right tabular-nums !font-semibold !text-slate-900">
                     Total
                   </td>
-                  <td className="num cell-strong">{formatNumber(poValue(draft))}</td>
+                  <td className="!text-right tabular-nums !font-semibold !text-slate-900">{formatNumber(poValue(draft))}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -359,8 +354,7 @@ export default function PurchaseOrderFormPage() {
 
         <Card title="Notes">
           <Field>
-            <textarea
-              className="textarea"
+            <Textarea
               placeholder="Optional notes…"
               value={draft.notes}
               onChange={(event) => setField('notes', event.target.value)}
@@ -368,7 +362,7 @@ export default function PurchaseOrderFormPage() {
           </Field>
         </Card>
 
-        <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
+        <div className="flex items-center justify-end gap-2.5 pb-2">
           <Button to={cancelTo} variant="ghost">
             Cancel
           </Button>

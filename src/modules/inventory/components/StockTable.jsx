@@ -1,17 +1,8 @@
 import { useEffect, useState } from 'react';
 import { formatNumber } from '../../../shared/utils/format';
 import { DeleteIcon } from '../../../shared/components/icons';
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-} from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import Input from '../../../shared/components/Input';
+import Button from '../../../shared/components/Button';
 
 /**
  * One editable stock row. Holds the in-progress value locally and commits on
@@ -50,11 +41,11 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
   }
 
   return (
-    <TableRow>
-      <TableCell className="px-6 font-mono text-xs">{item[codeKey]}</TableCell>
-      <TableCell className="font-medium">{item.name}</TableCell>
-      <TableCell>{item.unit}</TableCell>
-      <TableCell>
+    <tr>
+      <td className="!font-mono !text-[13px] !text-indigo-700">{item[codeKey]}</td>
+      <td className="!font-semibold !text-slate-900">{item.name}</td>
+      <td>{item.unit}</td>
+      <td>
         <div className="flex items-center gap-2">
           <Input
             className="w-28"
@@ -68,15 +59,15 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
               if (event.key === 'Enter') event.currentTarget.blur();
             }}
           />
-          {saving ? <span className="text-muted-foreground text-sm">saving…</span> : null}
+          {saving ? <span className="text-[13px] text-slate-500">saving…</span> : null}
         </div>
-      </TableCell>
-      <TableCell className="px-6 text-center">
+      </td>
+      <td className="!text-center">
         <Button
           type="button"
           variant="ghost"
-          size="icon"
-          className="text-destructive hover:text-destructive hover:bg-destructive/10 size-8"
+          size="sm"
+          className="text-red-600 hover:bg-red-50 hover:text-red-700"
           title={`Delete ${item.name}`}
           aria-label={`Delete ${item.name}`}
           onClick={handleDelete}
@@ -84,8 +75,8 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
         >
           <DeleteIcon size={15} />
         </Button>
-      </TableCell>
-    </TableRow>
+      </td>
+    </tr>
   );
 }
 
@@ -100,32 +91,34 @@ function StockRow({ item, codeKey, onSave, onDelete }) {
  */
 export default function StockTable({ items, codeKey, codeLabel, onSave, onDelete }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-1/5 px-6">{codeLabel}</TableHead>
-          <TableHead className="w-1/5">Name</TableHead>
-          <TableHead className="w-1/5">Unit</TableHead>
-          <TableHead className="w-1/5">On hand</TableHead>
-          <TableHead className="w-1/5 px-6 text-center">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.map((item) => (
-          <StockRow key={item.id} item={item} codeKey={codeKey} onSave={onSave} onDelete={onDelete} />
-        ))}
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell colSpan={3} className="px-6 text-muted-foreground text-sm">
-            {items.length} item{items.length === 1 ? '' : 's'}
-          </TableCell>
-          <TableCell className="text-muted-foreground text-sm">
-            {formatNumber(items.reduce((sum, item) => sum + (Number(item.onHand) || 0), 0))} total
-          </TableCell>
-          <TableCell />
-        </TableRow>
-      </TableFooter>
-    </Table>
+    <div className="overflow-x-auto">
+      <table className="w-full table-fixed border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
+        <thead>
+          <tr>
+            <th className="w-1/5">{codeLabel}</th>
+            <th className="w-1/5">Name</th>
+            <th className="w-1/5">Unit</th>
+            <th className="w-1/5">On hand</th>
+            <th className="w-1/5 !text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <StockRow key={item.id} item={item} codeKey={codeKey} onSave={onSave} onDelete={onDelete} />
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colSpan={3} className="!text-[13px] !text-slate-500">
+              {items.length} item{items.length === 1 ? '' : 's'}
+            </td>
+            <td className="!text-[13px] !text-slate-500">
+              {formatNumber(items.reduce((sum, item) => sum + (Number(item.onHand) || 0), 0))} total
+            </td>
+            <td />
+          </tr>
+        </tfoot>
+      </table>
+    </div>
   );
 }

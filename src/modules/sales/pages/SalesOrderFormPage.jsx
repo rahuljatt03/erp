@@ -5,6 +5,9 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
+import Textarea from '../../../shared/components/Textarea';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createId } from '../../../shared/utils/id';
 import { formatNumber } from '../../../shared/utils/format';
@@ -162,27 +165,24 @@ export default function SalesOrderFormPage() {
       <PageHeader />
 
       {draft.sourceInquiryNo ? (
-        <div className="banner" style={{ marginBottom: 18 }}>
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-blue-200 bg-blue-100 px-4 py-3 text-[13.5px] text-blue-800">
           <LinkIcon size={16} /> Converting inquiry <strong>&nbsp;{draft.sourceInquiryNo}</strong>. Saving will mark that
           inquiry as <strong>&nbsp;Converted</strong>.
         </div>
       ) : null}
 
       {errors.form ? (
-        <div
-          className="banner banner--error"
-          style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
-        >
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-red-200 bg-red-100 px-4 py-3 text-[13.5px] text-red-600">
           {errors.form}
         </div>
       ) : null}
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Customer & order details">
-          <div className="form-grid">
+          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-5 sm:grid-cols-2">
             <Field label="Customer name" required error={errors.fields.customerName}>
-              <input
-                className={`input ${errors.fields.customerName ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.customerName)}
                 value={draft.customerName}
                 onChange={(event) => setField('customerName', event.target.value)}
               />
@@ -199,29 +199,28 @@ export default function SalesOrderFormPage() {
               />
             </Field>
             <Field label="Order date" required error={errors.fields.orderDate}>
-              <input
-                className={`input ${errors.fields.orderDate ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.orderDate)}
                 type="date"
                 value={draft.orderDate}
                 onChange={(event) => setField('orderDate', event.target.value)}
               />
             </Field>
             <Field label="Expected delivery" hint="Optional">
-              <input
-                className="input"
+              <Input
                 type="date"
                 value={draft.expectedDeliveryDate}
                 onChange={(event) => setField('expectedDeliveryDate', event.target.value)}
               />
             </Field>
             <Field label="Status">
-              <select className="select" value={draft.status} onChange={(event) => setField('status', event.target.value)}>
+              <Select value={draft.status} onChange={(event) => setField('status', event.target.value)}>
                 {SO_STATUSES.map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           </div>
         </Card>
@@ -235,17 +234,17 @@ export default function SalesOrderFormPage() {
           }
           bodyFlush
         >
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Product</th>
                   <th>Code</th>
-                  <th className="num">Qty</th>
+                  <th className="!text-right">Qty</th>
                   <th>Unit</th>
                   <th>Delivery</th>
-                  <th className="num">Unit price</th>
-                  <th className="num">Line total</th>
+                  <th className="!text-right">Unit price</th>
+                  <th className="!text-right">Line total</th>
                   <th />
                 </tr>
               </thead>
@@ -255,26 +254,24 @@ export default function SalesOrderFormPage() {
                   return (
                     <tr key={item.id}>
                       <td>
-                        <input
-                          className="input"
+                        <Input
                           placeholder="Product name"
                           value={item.productName}
                           onChange={(event) => setItem(item.id, { productName: event.target.value })}
                         />
                       </td>
                       <td>
-                        <input
-                          className="input"
-                          style={{ width: 100 }}
+                        <Input
+                          className="w-[100px]"
                           placeholder="Code"
                           value={item.productCode}
                           onChange={(event) => setItem(item.id, { productCode: event.target.value })}
                         />
                       </td>
-                      <td className="num">
-                        <input
-                          className={`input ${itemErr.quantity ? 'has-error' : ''}`}
-                          style={{ width: 80, textAlign: 'right' }}
+                      <td className="!text-right tabular-nums">
+                        <Input
+                          invalid={Boolean(itemErr.quantity)}
+                          className="w-20 text-right"
                           type="number"
                           min="0"
                           step="any"
@@ -283,9 +280,8 @@ export default function SalesOrderFormPage() {
                         />
                       </td>
                       <td>
-                        <select
-                          className="select"
-                          style={{ width: 80 }}
+                        <Select
+                          className="w-20"
                           value={item.unit}
                           onChange={(event) => setItem(item.id, { unit: event.target.value })}
                         >
@@ -294,21 +290,19 @@ export default function SalesOrderFormPage() {
                               {unit}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </td>
                       <td>
-                        <input
-                          className="input"
-                          style={{ width: 150 }}
+                        <Input
+                          className="w-[150px]"
                           type="date"
                           value={item.deliveryDate}
                           onChange={(event) => setItem(item.id, { deliveryDate: event.target.value })}
                         />
                       </td>
-                      <td className="num">
-                        <input
-                          className="input"
-                          style={{ width: 100, textAlign: 'right' }}
+                      <td className="!text-right tabular-nums">
+                        <Input
+                          className="w-[100px] text-right"
                           type="number"
                           min="0"
                           step="any"
@@ -316,19 +310,20 @@ export default function SalesOrderFormPage() {
                           onChange={(event) => setItem(item.id, { unitPrice: event.target.value })}
                         />
                       </td>
-                      <td className="num cell-strong">
+                      <td className="!text-right tabular-nums !font-semibold !text-slate-900">
                         {formatNumber((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
                       </td>
-                      <td className="num">
-                        <button
+                      <td className="!text-right tabular-nums">
+                        <Button
                           type="button"
-                          className="btn btn-ghost btn-icon"
+                          variant="ghost"
+                          size="sm"
                           title="Remove line"
                           onClick={() => removeItem(item.id)}
                           disabled={draft.items.length === 1}
                         >
                           <RemoveIcon />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -336,10 +331,10 @@ export default function SalesOrderFormPage() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={6} className="num cell-strong">
+                  <td colSpan={6} className="!text-right tabular-nums !font-semibold !text-slate-900">
                     Order total
                   </td>
-                  <td className="num cell-strong">{formatNumber(soValue(draft))}</td>
+                  <td className="!text-right tabular-nums !font-semibold !text-slate-900">{formatNumber(soValue(draft))}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -349,8 +344,7 @@ export default function SalesOrderFormPage() {
 
         <Card title="Notes">
           <Field>
-            <textarea
-              className="textarea"
+            <Textarea
               placeholder="Optional notes…"
               value={draft.notes}
               onChange={(event) => setField('notes', event.target.value)}
@@ -358,7 +352,7 @@ export default function SalesOrderFormPage() {
           </Field>
         </Card>
 
-        <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
+        <div className="flex items-center justify-end gap-2.5 pb-2">
           <Button to={cancelTo} variant="ghost">
             Cancel
           </Button>

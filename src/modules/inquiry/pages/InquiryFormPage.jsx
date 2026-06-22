@@ -5,6 +5,9 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
+import Textarea from '../../../shared/components/Textarea';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createInquiry, fetchInquiry, updateInquiry } from '../inquirySlice';
 import {
@@ -169,17 +172,17 @@ export default function InquiryFormPage() {
       <PageHeader />
 
       {errors.form ? (
-        <div className="banner banner--error" style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}>
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-red-200 bg-red-100 px-4 py-3 text-[13.5px] text-red-600">
           {errors.form}
         </div>
       ) : null}
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Customer & inquiry details">
-          <div className="form-grid">
+          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-5 sm:grid-cols-2">
             <Field label="Customer name" required error={errors.fields.customerName}>
-              <input
-                className={`input ${errors.fields.customerName ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.customerName)}
                 placeholder="e.g. Apex Industrial Pumps"
                 value={draft.customerName}
                 onChange={(event) => setField('customerName', event.target.value)}
@@ -199,8 +202,8 @@ export default function InquiryFormPage() {
             </Field>
 
             <Field label="Inquiry date" required error={errors.fields.inquiryDate}>
-              <input
-                className={`input ${errors.fields.inquiryDate ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.inquiryDate)}
                 type="date"
                 value={draft.inquiryDate}
                 onChange={(event) => setField('inquiryDate', event.target.value)}
@@ -208,8 +211,7 @@ export default function InquiryFormPage() {
             </Field>
 
             <Field label="Status">
-              <select
-                className="select"
+              <Select
                 value={draft.status}
                 onChange={(event) => setField('status', event.target.value)}
               >
@@ -218,14 +220,14 @@ export default function InquiryFormPage() {
                     {status.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           </div>
         </Card>
 
         <div>
-          <div className="row-between" style={{ marginBottom: 12 }}>
-            <h2 style={{ fontSize: 17 }}>Products & raw materials</h2>
+          <div className="mb-3 flex items-center justify-between gap-2.5">
+            <h2 className="text-[17px] font-semibold text-slate-900">Products & raw materials</h2>
             <Button type="button" variant="secondary" size="sm" onClick={addItem}>
               <AddIcon /> Add product
             </Button>
@@ -246,8 +248,7 @@ export default function InquiryFormPage() {
 
         <Card title="Notes">
           <Field hint="Anything else relevant to this inquiry — deadlines, special terms, etc.">
-            <textarea
-              className="textarea"
+            <Textarea
               placeholder="Optional notes…"
               value={draft.notes}
               onChange={(event) => setField('notes', event.target.value)}
@@ -255,7 +256,7 @@ export default function InquiryFormPage() {
           </Field>
         </Card>
 
-        <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
+        <div className="flex items-center justify-end gap-2.5 pb-2">
           <Button to={cancelTo} variant="ghost">
             Cancel
           </Button>

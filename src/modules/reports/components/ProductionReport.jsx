@@ -33,7 +33,7 @@ export default function ProductionReport({ workOrders, range }) {
   };
 
   return (
-    <div className="stack">
+    <div className="flex flex-col gap-4">
       <ReportSummary
         items={[
           { label: 'Work orders', value: formatNumber(s.orderCount) },
@@ -48,7 +48,7 @@ export default function ProductionReport({ workOrders, range }) {
         ]}
       />
 
-      <div className="report-cols">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card title="Output by status" bodyFlush>
           <ReportTable
             columns={[
@@ -65,7 +65,7 @@ export default function ProductionReport({ workOrders, range }) {
         <Card title="Output by product" bodyFlush>
           <ReportTable
             columns={[
-              { key: 'label', label: 'Product', render: (row) => <span className="cell-strong">{row.label}</span> },
+              { key: 'label', label: 'Product', render: (row) => <span className="!font-semibold !text-slate-900">{row.label}</span> },
               { key: 'ordered', label: 'Ordered', align: 'num', render: (row) => formatNumber(row.ordered) },
               { key: 'produced', label: 'Produced', align: 'num', render: (row) => formatNumber(row.produced) },
               { key: 'completion', label: 'Done', align: 'num', render: (row) => `${row.completion}%` },
@@ -87,9 +87,9 @@ export default function ProductionReport({ workOrders, range }) {
       >
         <ReportTable
           columns={[
-            { key: 'woNo', label: 'WO No.', render: (row) => <span className="cell-mono">{row.woNo}</span> },
+            { key: 'woNo', label: 'WO No.', render: (row) => <span className="!font-mono !text-[13px] !text-indigo-700">{row.woNo}</span> },
             { key: 'date', label: 'Created', render: (row) => formatDate(row.date) },
-            { key: 'product', label: 'Product', render: (row) => <span className="cell-strong">{row.product}</span> },
+            { key: 'product', label: 'Product', render: (row) => <span className="!font-semibold !text-slate-900">{row.product}</span> },
             {
               key: 'status',
               label: 'Status',

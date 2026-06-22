@@ -98,15 +98,15 @@ export default function InquiryListPage() {
             }
           />
         ) : (
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Inquiry No.</th>
                   <th>Customer</th>
                   <th>Date</th>
                   <th>Products</th>
-                  <th className="num">Lines</th>
+                  <th className="!text-right">Lines</th>
                   <th>Earliest delivery</th>
                   <th>Status</th>
                 </tr>
@@ -117,14 +117,14 @@ export default function InquiryListPage() {
                   return (
                     <tr
                       key={inquiry.id}
-                      className="is-clickable"
+                      className="cursor-pointer hover:bg-indigo-50"
                       onClick={() => navigate(`/inquiries/${inquiry.id}`)}
                     >
-                      <td className="cell-mono">{inquiry.inquiryNo}</td>
-                      <td className="cell-strong">{inquiry.customerName}</td>
+                      <td className="!font-mono !text-[13px] !text-indigo-700">{inquiry.inquiryNo}</td>
+                      <td className="!font-semibold !text-slate-900">{inquiry.customerName}</td>
                       <td>{formatDate(inquiry.inquiryDate)}</td>
                       <td>{summariseProducts(inquiry)}</td>
-                      <td className="num">{countItems(inquiry)}</td>
+                      <td className="!text-right tabular-nums">{countItems(inquiry)}</td>
                       <td>{earliest ? formatDate(earliest) : "—"}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <StatusSelect

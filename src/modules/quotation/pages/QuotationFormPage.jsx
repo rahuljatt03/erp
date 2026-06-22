@@ -5,6 +5,9 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
+import Textarea from '../../../shared/components/Textarea';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createId } from '../../../shared/utils/id';
 import { formatNumber } from '../../../shared/utils/format';
@@ -165,20 +168,17 @@ export default function QuotationFormPage() {
       <PageHeader />
 
       {errors.form ? (
-        <div
-          className="banner banner--error"
-          style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
-        >
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-red-200 bg-red-100 px-4 py-3 text-[13.5px] text-red-600">
           {errors.form}
         </div>
       ) : null}
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Customer & quotation details">
-          <div className="form-grid">
+          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-5 sm:grid-cols-2">
             <Field label="Customer name" required error={errors.fields.customerName}>
-              <input
-                className={`input ${errors.fields.customerName ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.customerName)}
                 value={draft.customerName}
                 onChange={(event) => setField('customerName', event.target.value)}
               />
@@ -195,21 +195,21 @@ export default function QuotationFormPage() {
               />
             </Field>
             <Field label="Quote date" required error={errors.fields.quoteDate}>
-              <input
-                className={`input ${errors.fields.quoteDate ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.quoteDate)}
                 type="date"
                 value={draft.quoteDate}
                 onChange={(event) => setField('quoteDate', event.target.value)}
               />
             </Field>
             <Field label="Status">
-              <select className="select" value={draft.status} onChange={(event) => setField('status', event.target.value)}>
+              <Select value={draft.status} onChange={(event) => setField('status', event.target.value)}>
                 {QUOTE_STATUSES.map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           </div>
         </Card>
@@ -223,8 +223,8 @@ export default function QuotationFormPage() {
           }
           bodyFlush
         >
-          <div className="table-wrap">
-            <table className="table table-fixed">
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <colgroup>
                 <col style={{ width: '22%' }} />
                 <col style={{ width: '13%' }} />
@@ -239,11 +239,11 @@ export default function QuotationFormPage() {
                 <tr>
                   <th>Product</th>
                   <th>Code</th>
-                  <th className="num">Qty</th>
+                  <th className="!text-right">Qty</th>
                   <th>Unit</th>
                   <th>Delivery</th>
-                  <th className="num">Unit price</th>
-                  <th className="num">Line total</th>
+                  <th className="!text-right">Unit price</th>
+                  <th className="!text-right">Line total</th>
                   <th />
                 </tr>
               </thead>
@@ -253,25 +253,23 @@ export default function QuotationFormPage() {
                   return (
                     <tr key={item.id}>
                       <td>
-                        <input
-                          className="input"
+                        <Input
                           placeholder="Product name"
                           value={item.productName}
                           onChange={(event) => setItem(item.id, { productName: event.target.value })}
                         />
                       </td>
                       <td>
-                        <input
-                          className="input"
+                        <Input
                           placeholder="Code"
                           value={item.productCode}
                           onChange={(event) => setItem(item.id, { productCode: event.target.value })}
                         />
                       </td>
-                      <td className="num">
-                        <input
-                          className={`input ${itemErr.quantity ? 'has-error' : ''}`}
-                          style={{ textAlign: 'right' }}
+                      <td className="!text-right tabular-nums">
+                        <Input
+                          invalid={Boolean(itemErr.quantity)}
+                          className="text-right"
                           type="number"
                           min="0"
                           step="any"
@@ -280,8 +278,7 @@ export default function QuotationFormPage() {
                         />
                       </td>
                       <td>
-                        <select
-                          className="select"
+                        <Select
                           value={item.unit}
                           onChange={(event) => setItem(item.id, { unit: event.target.value })}
                         >
@@ -290,20 +287,18 @@ export default function QuotationFormPage() {
                               {unit}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </td>
                       <td>
-                        <input
-                          className="input"
+                        <Input
                           type="date"
                           value={item.deliveryDate}
                           onChange={(event) => setItem(item.id, { deliveryDate: event.target.value })}
                         />
                       </td>
-                      <td className="num">
-                        <input
-                          className="input"
-                          style={{ textAlign: 'right' }}
+                      <td className="!text-right tabular-nums">
+                        <Input
+                          className="text-right"
                           type="number"
                           min="0"
                           step="any"
@@ -311,19 +306,20 @@ export default function QuotationFormPage() {
                           onChange={(event) => setItem(item.id, { unitPrice: event.target.value })}
                         />
                       </td>
-                      <td className="num cell-strong">
+                      <td className="!text-right tabular-nums !font-semibold !text-slate-900">
                         {formatNumber((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
                       </td>
-                      <td className="num">
-                        <button
+                      <td className="!text-right tabular-nums">
+                        <Button
                           type="button"
-                          className="btn btn-ghost btn-icon"
+                          variant="ghost"
+                          size="sm"
                           title="Remove line"
                           onClick={() => removeItem(item.id)}
                           disabled={draft.items.length === 1}
                         >
                           <RemoveIcon />
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -331,10 +327,10 @@ export default function QuotationFormPage() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={6} className="num cell-strong">
+                  <td colSpan={6} className="!text-right tabular-nums !font-semibold !text-slate-900">
                     Quotation total
                   </td>
-                  <td className="num cell-strong">{formatNumber(quoteValue(draft))}</td>
+                  <td className="!text-right tabular-nums !font-semibold !text-slate-900">{formatNumber(quoteValue(draft))}</td>
                   <td />
                 </tr>
               </tfoot>
@@ -344,8 +340,7 @@ export default function QuotationFormPage() {
 
         <Card title="Notes">
           <Field>
-            <textarea
-              className="textarea"
+            <Textarea
               placeholder="Optional notes — lead time, terms, validity…"
               value={draft.notes}
               onChange={(event) => setField('notes', event.target.value)}
@@ -353,7 +348,7 @@ export default function QuotationFormPage() {
           </Field>
         </Card>
 
-        <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
+        <div className="flex items-center justify-end gap-2.5 pb-2">
           <Button to={cancelTo} variant="ghost">
             Cancel
           </Button>

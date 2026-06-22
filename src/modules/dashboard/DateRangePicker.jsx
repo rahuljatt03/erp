@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "../../shared/components/Button";
+import Input from "../../shared/components/Input";
 import {
   CalendarIcon,
   ChevronDownIcon,
@@ -178,7 +179,7 @@ export default function DateRangePicker({ value, onChange }) {
   };
 
   return (
-    <div className="date-picker" ref={ref}>
+    <div className="relative" ref={ref}>
       <Button
         variant="secondary"
         size="sm"
@@ -190,11 +191,17 @@ export default function DateRangePicker({ value, onChange }) {
       </Button>
 
       {open ? (
-        <div className="date-picker__panel" role="dialog" aria-label="Select date range">
-          <div className="date-picker__presets">
+        <div
+          className="absolute right-0 top-[calc(100%+8px)] z-40 flex overflow-hidden rounded-card border border-slate-200 bg-white shadow-pop max-[560px]:flex-col"
+          role="dialog"
+          aria-label="Select date range"
+        >
+          <div className="flex max-h-[372px] w-[210px] flex-col gap-0.5 overflow-y-auto border-r border-slate-200 p-1.5 max-[560px]:max-h-[168px] max-[560px]:w-full max-[560px]:border-b max-[560px]:border-r-0">
             <button
               type="button"
-              className={`date-picker__preset${activeKey === "custom" ? " is-active" : ""}`}
+              className={`cursor-pointer whitespace-nowrap rounded-field border-none bg-transparent px-3 py-[9px] text-left text-sm hover:bg-slate-50 ${
+                activeKey === "custom" ? "bg-indigo-50 font-semibold text-indigo-700" : "text-slate-700"
+              }`}
             >
               Custom
             </button>
@@ -202,7 +209,9 @@ export default function DateRangePicker({ value, onChange }) {
               <button
                 key={preset.key}
                 type="button"
-                className={`date-picker__preset${activeKey === preset.key ? " is-active" : ""}`}
+                className={`cursor-pointer whitespace-nowrap rounded-field border-none bg-transparent px-3 py-[9px] text-left text-sm hover:bg-slate-50 ${
+                  activeKey === preset.key ? "bg-indigo-50 font-semibold text-indigo-700" : "text-slate-700"
+                }`}
                 onClick={() => applyPreset(preset)}
               >
                 {preset.label}
@@ -210,46 +219,34 @@ export default function DateRangePicker({ value, onChange }) {
             ))}
           </div>
 
-          <div className="date-picker__cal">
-            <div className="date-picker__dates">
-              <label className="date-picker__field">
+          <div className="flex w-[316px] flex-col px-4 py-3.5 max-[560px]:w-full">
+            <div className="mb-3 flex items-end gap-2">
+              <label className="flex min-w-0 flex-1 flex-col gap-1 text-[11.5px] font-semibold text-slate-500">
                 <span>Start date</span>
-                <input
-                  type="text"
-                  className="input"
-                  readOnly
-                  placeholder="Any date"
-                  value={formatField(draft.from)}
-                />
+                <Input type="text" className="px-2 py-1.5" readOnly placeholder="Any date" value={formatField(draft.from)} />
               </label>
-              <span className="date-picker__dash">–</span>
-              <label className="date-picker__field">
+              <span className="pb-2 text-slate-500">–</span>
+              <label className="flex min-w-0 flex-1 flex-col gap-1 text-[11.5px] font-semibold text-slate-500">
                 <span>End date</span>
-                <input
-                  type="text"
-                  className="input"
-                  readOnly
-                  placeholder="Any date"
-                  value={formatField(draft.to)}
-                />
+                <Input type="text" className="px-2 py-1.5" readOnly placeholder="Any date" value={formatField(draft.to)} />
               </label>
             </div>
 
-            <div className="date-picker__cal-head">
+            <div className="mb-1.5 flex items-center justify-between">
               <button
                 type="button"
-                className="date-picker__nav"
+                className="inline-flex size-7 cursor-pointer items-center justify-center rounded-field border-none bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 [&>svg]:size-4"
                 aria-label="Previous month"
                 onClick={() => setView((v) => new Date(v.getFullYear(), v.getMonth() - 1, 1))}
               >
                 <ChevronLeftIcon />
               </button>
-              <span className="date-picker__month">
+              <span className="text-sm font-semibold text-slate-900">
                 {MONTHS[view.getMonth()]} {view.getFullYear()}
               </span>
               <button
                 type="button"
-                className="date-picker__nav"
+                className="inline-flex size-7 cursor-pointer items-center justify-center rounded-field border-none bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-700 [&>svg]:size-4"
                 aria-label="Next month"
                 onClick={() => setView((v) => new Date(v.getFullYear(), v.getMonth() + 1, 1))}
               >
@@ -257,35 +254,35 @@ export default function DateRangePicker({ value, onChange }) {
               </button>
             </div>
 
-            <div className="date-picker__grid">
+            <div className="grid grid-cols-7">
               {WEEKDAYS.map((d, i) => (
-                <span key={i} className="date-picker__dow">{d}</span>
+                <span key={i} className="flex h-[30px] items-center justify-center text-[11px] font-semibold text-slate-500">{d}</span>
               ))}
             </div>
-            <div className="date-picker__grid">
+            <div className="grid grid-cols-7">
               {cells.map((cell, i) => {
-                if (!cell) return <span key={i} className="date-picker__day is-empty" />;
+                if (!cell) return <span key={i} className="flex h-9 cursor-default items-center justify-center" />;
                 const ds = iso(cell);
                 const endpoint = ds === draft.from || ds === draft.to;
                 const inRange = draft.from && draft.to && ds >= draft.from && ds <= draft.to;
-                const cls = ["date-picker__day"];
-                if (inRange) cls.push("in-range");
-                if (endpoint) cls.push("is-endpoint");
-                if (ds === todayIso) cls.push("is-today");
+                const isToday = ds === todayIso;
+                const cls = [
+                  "flex h-9 cursor-pointer items-center justify-center border-none bg-transparent text-[13px]",
+                  inRange ? "bg-indigo-50" : "",
+                  isToday ? "font-bold text-indigo-700" : "text-slate-700",
+                  endpoint
+                    ? "!rounded-field !bg-indigo-600 font-semibold !text-white"
+                    : "hover:rounded-field hover:bg-slate-100",
+                ].filter(Boolean).join(" ");
                 return (
-                  <button
-                    key={i}
-                    type="button"
-                    className={cls.join(" ")}
-                    onClick={() => pickDay(ds)}
-                  >
+                  <button key={i} type="button" className={cls} onClick={() => pickDay(ds)}>
                     {cell.getDate()}
                   </button>
                 );
               })}
             </div>
 
-            <div className="date-picker__footer">
+            <div className="mt-3 flex justify-end gap-2 border-t border-slate-200 pt-2.5">
               <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
                 Cancel
               </Button>

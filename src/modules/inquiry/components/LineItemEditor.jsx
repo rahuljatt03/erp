@@ -1,4 +1,7 @@
 import Field from '../../../shared/components/Field';
+import Button from '../../../shared/components/Button';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
 import { UNITS, blankRawMaterial } from '../inquiry.constants';
 import { AddIcon, RemoveIcon, RawMaterialIcon } from '../../../shared/components/icons';
 
@@ -31,24 +34,28 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
     update({ rawMaterials: item.rawMaterials.filter((material) => material.id !== materialId) });
 
   return (
-    <div className="lineitem">
-      <div className="lineitem__head">
-        <div className="row">
-          <span className="lineitem__index">{index + 1}</span>
-          <span className="lineitem__title">{item.productName?.trim() || 'New product'}</span>
+    <div className="mb-4 overflow-hidden rounded-card border border-slate-200 bg-slate-50">
+      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-[11px]">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-grid size-6 place-items-center rounded-[6px] bg-indigo-100 text-[13px] font-bold text-indigo-700">
+            {index + 1}
+          </span>
+          <span className="text-sm font-semibold text-slate-900">
+            {item.productName?.trim() || 'New product'}
+          </span>
         </div>
         {canRemove && (
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onRemove}>
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
             <RemoveIcon /> Remove line
-          </button>
+          </Button>
         )}
       </div>
 
-      <div className="lineitem__body">
-        <div className="form-grid form-grid--3">
-          <Field label="Product" required error={errors.productName} className="col-span-2">
-            <input
-              className={`input ${errors.productName ? 'has-error' : ''}`}
+      <div className="p-4">
+        <div className="grid grid-cols-1 items-start gap-x-4 gap-y-5 sm:grid-cols-3">
+          <Field label="Product" required error={errors.productName} className="sm:col-span-2">
+            <Input
+              invalid={Boolean(errors.productName)}
               placeholder="e.g. Cast Iron Pump Housing"
               value={item.productName}
               onChange={(event) => update({ productName: event.target.value })}
@@ -56,8 +63,7 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
           </Field>
 
           <Field label="Product code" hint="Optional">
-            <input
-              className="input"
+            <Input
               placeholder="e.g. PH-450"
               value={item.productCode}
               onChange={(event) => update({ productCode: event.target.value })}
@@ -65,35 +71,29 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
           </Field>
 
           <Field label="Quantity" required error={errors.quantity}>
-            <div className="input-affix">
-              <input
-                className={`input ${errors.quantity ? 'has-error' : ''}`}
-                type="number"
-                min="0"
-                step="any"
-                value={item.quantity}
-                onChange={(event) => update({ quantity: event.target.value })}
-              />
-            </div>
+            <Input
+              invalid={Boolean(errors.quantity)}
+              type="number"
+              min="0"
+              step="any"
+              value={item.quantity}
+              onChange={(event) => update({ quantity: event.target.value })}
+            />
           </Field>
 
           <Field label="Unit">
-            <select
-              className="select"
-              value={item.unit}
-              onChange={(event) => update({ unit: event.target.value })}
-            >
+            <Select value={item.unit} onChange={(event) => update({ unit: event.target.value })}>
               {UNITS.map((unit) => (
                 <option key={unit} value={unit}>
                   {unit}
                 </option>
               ))}
-            </select>
+            </Select>
           </Field>
 
           <Field label="Target delivery date" required error={errors.targetDeliveryDate}>
-            <input
-              className={`input ${errors.targetDeliveryDate ? 'has-error' : ''}`}
+            <Input
+              invalid={Boolean(errors.targetDeliveryDate)}
               type="date"
               value={item.targetDeliveryDate}
               onChange={(event) => update({ targetDeliveryDate: event.target.value })}
@@ -101,19 +101,22 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
           </Field>
         </div>
 
-        <div className="materials">
-          <div className="materials__label"><RawMaterialIcon size={14} /> Raw materials needed</div>
+        <div className="mt-3.5 border-t border-dashed border-slate-300 pt-3.5">
+          <div className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">
+            <RawMaterialIcon size={14} /> Raw materials needed
+          </div>
 
           {item.rawMaterials.map((material) => (
-            <div className="material-row" key={material.id}>
-              <input
-                className="input"
+            <div
+              className="mb-2 grid grid-cols-[2fr_1fr_1fr_auto] items-start gap-2.5 max-nav:grid-cols-2"
+              key={material.id}
+            >
+              <Input
                 placeholder="Material name (e.g. Grey Cast Iron FG260)"
                 value={material.materialName}
                 onChange={(event) => updateMaterial(material.id, { materialName: event.target.value })}
               />
-              <input
-                className="input"
+              <Input
                 type="number"
                 min="0"
                 step="any"
@@ -121,8 +124,7 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
                 value={material.quantity}
                 onChange={(event) => updateMaterial(material.id, { quantity: event.target.value })}
               />
-              <select
-                className="select"
+              <Select
                 value={material.unit}
                 onChange={(event) => updateMaterial(material.id, { unit: event.target.value })}
               >
@@ -131,22 +133,23 @@ export default function LineItemEditor({ item, index, errors = {}, onChange, onR
                     {unit}
                   </option>
                 ))}
-              </select>
-              <button
+              </Select>
+              <Button
                 type="button"
-                className="btn btn-ghost btn-icon"
+                variant="ghost"
+                size="sm"
                 title="Remove material"
                 onClick={() => removeMaterial(material.id)}
                 disabled={item.rawMaterials.length === 1}
               >
                 <RemoveIcon />
-              </button>
+              </Button>
             </div>
           ))}
 
-          <button type="button" className="btn btn-secondary btn-sm" onClick={addMaterial}>
+          <Button type="button" variant="secondary" size="sm" onClick={addMaterial}>
             <AddIcon /> Add material
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -121,25 +121,25 @@ export default function AreaChart({
         : "translateX(-50%)";
 
   return (
-    <div className="chart">
-      <div className="chart__legend">
+    <div className="flex flex-col gap-3.5">
+      <div className="flex flex-wrap gap-[18px] px-0.5">
         {legendSeries.map((s) => (
-          <span key={s.key} className="chart__legend-item">
-            <span className="chart__swatch" style={{ background: s.color }} />
+          <span key={s.key} className="inline-flex items-center gap-[7px] text-[13px] font-medium text-slate-500">
+            <span className="size-2.5 shrink-0 rounded-[3px]" style={{ background: s.color }} />
             {s.label}
           </span>
         ))}
         {hasForecast ? (
-          <span className="chart__legend-item">
-            <span className="chart__swatch chart__swatch--forecast" />
+          <span className="inline-flex items-center gap-[7px] text-[13px] font-medium text-slate-500">
+            <span className="size-2.5 shrink-0 rounded-[3px] [background:repeating-linear-gradient(90deg,var(--text-muted)_0,var(--text-muted)_3px,transparent_3px,transparent_6px)]" />
             Forecast (min–avg–max)
           </span>
         ) : null}
       </div>
 
-      <div className="chart__plot" onMouseLeave={() => setHover(null)}>
+      <div className="relative" onMouseLeave={() => setHover(null)}>
         <svg
-          className="chart__svg"
+          className="block h-auto w-full overflow-visible"
           viewBox={`0 0 ${W} ${H}`}
           preserveAspectRatio="xMidYMid meet"
           role="img"
@@ -171,13 +171,13 @@ export default function AreaChart({
                 y1={y(t)}
                 x2={W - padR}
                 y2={y(t)}
-                className="chart__grid"
+                className="[stroke:var(--border)] [stroke-width:1]"
                 vectorEffect="non-scaling-stroke"
               />
               <text
                 x={padL - 8}
                 y={y(t)}
-                className="chart__axis"
+                className="text-[11px] font-medium [fill:var(--text-muted)]"
                 textAnchor="end"
                 dominantBaseline="middle"
               >
@@ -193,7 +193,7 @@ export default function AreaChart({
               y1={padT}
               x2={x(forecastFrom)}
               y2={baseline}
-              className="chart__seam"
+              className="opacity-50 [stroke-dasharray:2_3] [stroke-width:1] [stroke:var(--text-muted)]"
               vectorEffect="non-scaling-stroke"
             />
           ) : null}
@@ -214,11 +214,11 @@ export default function AreaChart({
                   : null;
               return (
                 <g key={s.key}>
-                  {band ? <path d={band} className="chart__band" fill={s.color} /> : null}
+                  {band ? <path d={band} className="[fill-opacity:0.12] [stroke:none]" fill={s.color} /> : null}
                   {avgPts.length ? (
                     <path
                       d={linePath(avgPts)}
-                      className="chart__line chart__line--forecast"
+                      className="fill-none [stroke-dasharray:5_4] [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2]"
                       stroke={s.color}
                       vectorEffect="non-scaling-stroke"
                     />
@@ -229,7 +229,7 @@ export default function AreaChart({
                       cx={p[0]}
                       cy={p[1]}
                       r="3"
-                      className="chart__dot"
+                      className="[fill:var(--surface)] [stroke-width:2]"
                       stroke={s.color}
                       vectorEffect="non-scaling-stroke"
                     />
@@ -249,7 +249,7 @@ export default function AreaChart({
                 <path d={area} fill={`url(#${id}-${s.key})`} />
                 <path
                   d={linePath(pts)}
-                  className="chart__line"
+                  className="fill-none [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:2]"
                   stroke={s.color}
                   vectorEffect="non-scaling-stroke"
                 />
@@ -259,7 +259,7 @@ export default function AreaChart({
                     cx={p[0]}
                     cy={p[1]}
                     r="3"
-                    className="chart__dot"
+                    className="[fill:var(--surface)] [stroke-width:2]"
                     stroke={s.color}
                     vectorEffect="non-scaling-stroke"
                   />
@@ -276,7 +276,7 @@ export default function AreaChart({
               key={d.label}
               x={x(i)}
               y={H - 8}
-              className="chart__axis"
+              className="text-[11px] font-medium [fill:var(--text-muted)]"
               textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
             >
               {d.label}
@@ -291,7 +291,7 @@ export default function AreaChart({
                 y1={padT}
                 x2={x(hover)}
                 y2={baseline}
-                className="chart__guide"
+                className="opacity-[0.55] [stroke-dasharray:3_3] [stroke-width:1] [stroke:var(--text-muted)]"
                 vectorEffect="non-scaling-stroke"
               />
               {series.map((s) => {
@@ -321,7 +321,7 @@ export default function AreaChart({
             return (
               <rect
                 key={d.label}
-                className="chart__hit"
+                className="[fill:transparent]"
                 x={left}
                 y={padT}
                 width={Math.max(0, right - left)}
@@ -334,10 +334,10 @@ export default function AreaChart({
 
         {hover != null ? (
           <div
-            className="chart__tooltip"
+            className="pointer-events-none absolute top-1 z-[5] min-w-[132px] rounded-field border border-slate-200 bg-white px-2.5 py-2 text-xs shadow-pop"
             style={{ left: `${tipLeftPct}%`, transform: tipTransform }}
           >
-            <div className="chart__tooltip-title">
+            <div className="mb-1.5 font-semibold text-slate-900">
               {tooltipTitle(data[hover])}
             </div>
             {series.map((s) => {
@@ -347,15 +347,15 @@ export default function AreaChart({
               const lo = s.band ? num(data[hover][s.band.lo]) : null;
               const hi = s.band ? num(data[hover][s.band.hi]) : null;
               return (
-                <div key={s.key} className="chart__tooltip-row">
-                  <span className="chart__tooltip-key">
-                    <span className="chart__swatch" style={{ background: s.color }} />
+                <div key={s.key} className="mt-1 flex items-center justify-between gap-4">
+                  <span className="inline-flex items-center gap-[7px] text-slate-500">
+                    <span className="size-2.5 shrink-0 rounded-[3px]" style={{ background: s.color }} />
                     {s.label}
                   </span>
-                  <span className="chart__tooltip-val">
+                  <span className="font-semibold text-slate-900 tabular-nums">
                     {formatValue(v)}
                     {lo != null && hi != null ? (
-                      <span className="chart__tooltip-range">
+                      <span className="font-medium text-slate-500">
                         {" "}
                         ({formatValue(lo)}–{formatValue(hi)})
                       </span>

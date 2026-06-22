@@ -5,6 +5,9 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Field from '../../../shared/components/Field';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
+import Textarea from '../../../shared/components/Textarea';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { createProductionOrder, fetchProductionOrder, updateProductionOrder } from '../productionSlice';
 import { WO_STATUSES, UNITS, blankWODraft, blankWOMaterial } from '../production.constants';
@@ -132,35 +135,31 @@ export default function ProductionOrderFormPage() {
       <PageHeader />
 
       {errors.form ? (
-        <div
-          className="banner banner--error"
-          style={{ marginBottom: 18, background: 'var(--danger-bg)', color: 'var(--danger)', borderColor: '#fecaca' }}
-        >
+        <div className="mb-[18px] flex gap-2.5 rounded-field border border-red-200 bg-red-100 px-4 py-3 text-[13.5px] text-red-600">
           {errors.form}
         </div>
       ) : null}
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Product to build">
-          <div className="form-grid">
+          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-5 sm:grid-cols-2">
             <Field label="Product name" required error={errors.fields.productName}>
-              <input
-                className={`input ${errors.fields.productName ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.productName)}
                 placeholder="e.g. Cast Iron Pump Housing"
                 value={draft.productName}
                 onChange={(event) => setField('productName', event.target.value)}
               />
             </Field>
             <Field label="Product code" hint="Optional">
-              <input
-                className="input"
+              <Input
                 value={draft.productCode}
                 onChange={(event) => setField('productCode', event.target.value)}
               />
             </Field>
             <Field label="Quantity to build" required error={errors.fields.quantity}>
-              <input
-                className={`input ${errors.fields.quantity ? 'has-error' : ''}`}
+              <Input
+                invalid={Boolean(errors.fields.quantity)}
                 type="number"
                 min="0"
                 step="any"
@@ -169,30 +168,29 @@ export default function ProductionOrderFormPage() {
               />
             </Field>
             <Field label="Unit">
-              <select className="select" value={draft.unit} onChange={(event) => setField('unit', event.target.value)}>
+              <Select value={draft.unit} onChange={(event) => setField('unit', event.target.value)}>
                 {UNITS.map((unit) => (
                   <option key={unit} value={unit}>
                     {unit}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="Due date" hint="Optional">
-              <input
-                className="input"
+              <Input
                 type="date"
                 value={draft.dueDate}
                 onChange={(event) => setField('dueDate', event.target.value)}
               />
             </Field>
             <Field label="Status">
-              <select className="select" value={draft.status} onChange={(event) => setField('status', event.target.value)}>
+              <Select value={draft.status} onChange={(event) => setField('status', event.target.value)}>
                 {WO_STATUSES.filter((s) => s.value !== 'in_progress').map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           </div>
         </Card>
@@ -206,13 +204,13 @@ export default function ProductionOrderFormPage() {
           }
           bodyFlush
         >
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Material</th>
                   <th>Code</th>
-                  <th className="num">Quantity</th>
+                  <th className="!text-right">Quantity</th>
                   <th>Unit</th>
                   <th />
                 </tr>
@@ -221,26 +219,23 @@ export default function ProductionOrderFormPage() {
                 {draft.materials.map((material) => (
                   <tr key={material.id}>
                     <td>
-                      <input
-                        className="input"
+                      <Input
                         placeholder="Material name"
                         value={material.materialName}
                         onChange={(event) => setMaterial(material.id, { materialName: event.target.value })}
                       />
                     </td>
                     <td>
-                      <input
-                        className="input"
-                        style={{ width: 110 }}
+                      <Input
+                        className="w-[110px]"
                         placeholder="Code"
                         value={material.materialCode}
                         onChange={(event) => setMaterial(material.id, { materialCode: event.target.value })}
                       />
                     </td>
-                    <td className="num">
-                      <input
-                        className="input"
-                        style={{ width: 100, textAlign: 'right' }}
+                    <td className="!text-right">
+                      <Input
+                        className="w-[100px] text-right"
                         type="number"
                         min="0"
                         step="any"
@@ -249,9 +244,8 @@ export default function ProductionOrderFormPage() {
                       />
                     </td>
                     <td>
-                      <select
-                        className="select"
-                        style={{ width: 90 }}
+                      <Select
+                        className="w-[90px]"
                         value={material.unit}
                         onChange={(event) => setMaterial(material.id, { unit: event.target.value })}
                       >
@@ -260,18 +254,19 @@ export default function ProductionOrderFormPage() {
                             {unit}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </td>
-                    <td className="num">
-                      <button
+                    <td className="!text-right">
+                      <Button
                         type="button"
-                        className="btn btn-ghost btn-icon"
+                        variant="ghost"
+                        size="sm"
                         title="Remove material"
                         onClick={() => removeMaterial(material.id)}
                         disabled={draft.materials.length === 1}
                       >
                         <RemoveIcon />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -282,8 +277,7 @@ export default function ProductionOrderFormPage() {
 
         <Card title="Notes">
           <Field>
-            <textarea
-              className="textarea"
+            <Textarea
               placeholder="Optional notes…"
               value={draft.notes}
               onChange={(event) => setField('notes', event.target.value)}
@@ -291,7 +285,7 @@ export default function ProductionOrderFormPage() {
           </Field>
         </Card>
 
-        <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
+        <div className="flex items-center justify-end gap-2.5 pb-2">
           <Button to={cancelTo} variant="ghost">
             Cancel
           </Button>

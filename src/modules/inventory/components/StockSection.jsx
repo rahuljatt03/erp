@@ -3,6 +3,8 @@ import { Dialog } from 'primereact/dialog';
 import Card from '../../../shared/components/Card';
 import Button from '../../../shared/components/Button';
 import Field from '../../../shared/components/Field';
+import Input from '../../../shared/components/Input';
+import Select from '../../../shared/components/Select';
 import StockTable from './StockTable';
 import { AddIcon } from '../../../shared/components/icons';
 import { UNITS } from '../../inquiry/inquiry.constants';
@@ -109,31 +111,29 @@ export default function StockSection({
         modal
         draggable={false}
       >
-        <form id={formId} className="stock-add-modal" onSubmit={submit}>
+        <form id={formId} className="flex flex-col gap-[15px]" onSubmit={submit}>
           <Field label={codeLabel} htmlFor={`${formId}-code`}>
-            <input
+            <Input
               id={`${formId}-code`}
-              className="input"
               value={draft.code}
               onChange={set('code')}
               placeholder={codeKey === 'sku' ? 'e.g. PH-450' : 'e.g. CI-FG260'}
             />
           </Field>
           <Field label="Name" required htmlFor={`${formId}-name`} error={nameError}>
-            <input
+            <Input
               id={`${formId}-name`}
-              className="input"
+              invalid={Boolean(nameError)}
               value={draft.name}
               onChange={set('name')}
               aria-invalid={nameError ? true : undefined}
               autoFocus
             />
           </Field>
-          <div className="stock-add-modal__row">
+          <div className="grid grid-cols-2 gap-3.5">
             <Field label="Unit" htmlFor={`${formId}-unit`}>
-              <select
+              <Select
                 id={`${formId}-unit`}
-                className="select"
                 value={draft.unit}
                 onChange={set('unit')}
               >
@@ -142,12 +142,11 @@ export default function StockSection({
                     {unit}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label="On hand" htmlFor={`${formId}-onhand`}>
-              <input
+              <Input
                 id={`${formId}-onhand`}
-                className="input"
                 type="number"
                 min="0"
                 step="any"

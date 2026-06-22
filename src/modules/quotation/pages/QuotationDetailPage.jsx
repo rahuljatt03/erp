@@ -28,9 +28,11 @@ import { confirm, confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
-    <div className="detail-item">
-      <div className="detail-item__label">{label}</div>
-      <div className="detail-item__value">{children}</div>
+    <div>
+      <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">
+        {label}
+      </div>
+      <div className="text-[15px] font-medium text-slate-900">{children}</div>
     </div>
   );
 }
@@ -151,9 +153,9 @@ export default function QuotationDetailPage() {
         }
       />
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Quotation details">
-          <div className="detail-grid">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-[18px]">
             <Detail label="Customer">{quote.customerName}</Detail>
             <Detail label="Contact">{quote.customerContact || '—'}</Detail>
             <Detail label="Quote date">{formatDate(quote.quoteDate)}</Detail>
@@ -161,37 +163,37 @@ export default function QuotationDetailPage() {
           </div>
           {quote.notes ? (
             <>
-              <div className="divider" style={{ margin: '18px 0' }} />
-              <div className="detail-item__label">Notes</div>
-              <p style={{ marginTop: 4 }}>{quote.notes}</p>
+              <div className="my-[18px] h-px bg-slate-200" />
+              <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">Notes</div>
+              <p className="mt-1">{quote.notes}</p>
             </>
           ) : null}
         </Card>
 
         <Card title="Quotation lines" bodyFlush>
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Product</th>
                   <th>Code</th>
-                  <th className="num">Qty</th>
+                  <th className="!text-right">Qty</th>
                   <th>Delivery date</th>
-                  <th className="num">Unit price</th>
-                  <th className="num">Line total</th>
+                  <th className="!text-right">Unit price</th>
+                  <th className="!text-right">Line total</th>
                 </tr>
               </thead>
               <tbody>
                 {quote.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="cell-strong">{item.productName}</td>
+                    <td className="!font-semibold !text-slate-900">{item.productName}</td>
                     <td>{item.productCode || '—'}</td>
-                    <td className="num">
+                    <td className="!text-right tabular-nums">
                       {formatNumber(item.quantity)} {item.unit}
                     </td>
                     <td>{item.deliveryDate ? formatDate(item.deliveryDate) : '—'}</td>
-                    <td className="num">{formatNumber(item.unitPrice)}</td>
-                    <td className="num cell-strong">
+                    <td className="!text-right tabular-nums">{formatNumber(item.unitPrice)}</td>
+                    <td className="!text-right tabular-nums !font-semibold !text-slate-900">
                       {formatNumber((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
                     </td>
                   </tr>
@@ -199,10 +201,10 @@ export default function QuotationDetailPage() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={5} className="num cell-strong">
+                  <td colSpan={5} className="!text-right tabular-nums !font-semibold !text-slate-900">
                     Quotation total
                   </td>
-                  <td className="num cell-strong">{formatNumber(quoteValue(quote))}</td>
+                  <td className="!text-right tabular-nums !font-semibold !text-slate-900">{formatNumber(quoteValue(quote))}</td>
                 </tr>
               </tfoot>
             </table>

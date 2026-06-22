@@ -134,7 +134,7 @@ export default function ReportsPage() {
       ) : error ? (
         <ErrorState text={error} onRetry={refreshAll} />
       ) : (
-        <div className="stack">
+        <div className="flex flex-col gap-4">
           <Card>
             <ReportFilters range={range} onChange={setRange} />
           </Card>

@@ -98,15 +98,15 @@ export default function QuotationListPage() {
             }
           />
         ) : (
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Quote No.</th>
                   <th>Customer</th>
                   <th>Quote date</th>
-                  <th className="num">Value</th>
-                  <th style={{ paddingLeft: 40 }}>Status</th>
+                  <th className="!text-right">Value</th>
+                  <th className="pl-10">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -114,14 +114,14 @@ export default function QuotationListPage() {
                   return (
                     <tr
                       key={quote.id}
-                      className="is-clickable"
+                      className="cursor-pointer hover:bg-indigo-50"
                       onClick={() => navigate(`/quotations/${quote.id}`)}
                     >
-                      <td className="cell-mono">{quote.quoteNo}</td>
-                      <td className="cell-strong">{quote.customerName}</td>
+                      <td className="!font-mono !text-[13px] !text-indigo-700">{quote.quoteNo}</td>
+                      <td className="!font-semibold !text-slate-900">{quote.customerName}</td>
                       <td>{formatDate(quote.quoteDate)}</td>
-                      <td className="num">{formatNumber(quoteValue(quote))}</td>
-                      <td style={{ paddingLeft: 40 }} onClick={(e) => e.stopPropagation()}>
+                      <td className="!text-right tabular-nums">{formatNumber(quoteValue(quote))}</td>
+                      <td className="pl-10" onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
                           value={quote.status}
                           options={QUOTE_STATUSES}

@@ -54,6 +54,20 @@ import {
   withForecast,
 } from "./dashboard.aggregate";
 
+// Shared table styling (matches the design-system `.table`); the active-WO table
+// adds `table-fixed` + truncating cells on top of this.
+const TABLE_CLS =
+  "w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0";
+
+// Rounded glyph chip shared by KPI cards (tinted by tone).
+const ICON_TONE = {
+  neutral: "bg-slate-100 text-slate-600",
+  info: "bg-blue-100 text-blue-600",
+  success: "bg-green-100 text-green-600",
+  warning: "bg-amber-100 text-amber-600",
+  danger: "bg-red-100 text-red-600",
+};
+
 const SALES_SERIES = [
   { key: "orders", label: "Sales orders", color: "var(--success)" },
   { key: "quotations", label: "Quotations", color: "var(--info)" },
@@ -207,8 +221,8 @@ function swap(order, a, b) {
 /** A section/card title prefixed with a grip handle that signals it's draggable. */
 function dragTitle(text) {
   return (
-    <span className="card-drag-title">
-      <DragHandleIcon className="drag-handle" />
+    <span className="inline-flex min-w-0 items-center gap-2">
+      <DragHandleIcon className="size-4 shrink-0 text-slate-500" />
       {text}
     </span>
   );
@@ -216,30 +230,31 @@ function dragTitle(text) {
 
 /** A single headline number with a module glyph. Forwards DnD props to the card. */
 function Kpi({ label, value, meta, icon: Icon, tone = "neutral", className = "", ...rest }) {
-  const iconClass =
-    tone === "neutral" ? "dash-icon" : `dash-icon dash-icon--${tone}`;
   return (
-    <div className={`stat${className ? ` ${className}` : ""}`} {...rest}>
-      <div className="row-between">
-        <span className="card-drag-title">
-          <DragHandleIcon className="drag-handle" />
-          <span className="stat__label">{label}</span>
+    <div
+      className={`rounded-card border border-slate-200 bg-white pb-[18px] pl-2 pr-5 pt-3 shadow-card${className ? ` ${className}` : ""}`}
+      {...rest}
+    >
+      <div className="flex items-center justify-between gap-2.5">
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <DragHandleIcon className="size-4 shrink-0 text-slate-500" />
+          <span className="text-[13px] font-medium text-slate-500">{label}</span>
         </span>
-        <div className={iconClass}>
+        <div className={`grid size-[34px] shrink-0 place-items-center rounded-[9px] [&>svg]:size-[18px] ${ICON_TONE[tone] ?? ICON_TONE.neutral}`}>
           <Icon />
         </div>
       </div>
-      <div className="stat__value">
+      <div className="mt-1.5 text-[28px] font-bold text-slate-900 tabular-nums">
         {typeof value === "string" && value.startsWith("+") ? (
           <>
-            <span className="text-success">+</span>
+            <span className="text-green-600">+</span>
             {value.slice(1)}
           </>
         ) : (
           value
         )}
       </div>
-      {meta ? <div className="stat__meta">{meta}</div> : null}
+      {meta ? <div className="mt-1 text-xs text-slate-500">{meta}</div> : null}
     </div>
   );
 }
@@ -247,8 +262,8 @@ function Kpi({ label, value, meta, icon: Icon, tone = "neutral", className = "",
 /** Compact "no data" note for a section whose range yielded nothing. */
 function emptyNote(text) {
   return (
-    <div className="state">
-      <p className="state__text">{text}</p>
+    <div className="px-6 py-[52px] text-center text-slate-500">
+      <p className="text-sm">{text}</p>
     </div>
   );
 }
@@ -359,7 +374,7 @@ export default function DashboardPage() {
   const gridVisible = visibleGrid.length > 0;
   const lastFullId =
     visibleGrid.length % 2 === 1 ? visibleGrid[visibleGrid.length - 1] : null;
-  const fullClass = (id) => (id === lastFullId ? "dash-cell--full" : "");
+  const fullClass = (id) => (id === lastFullId ? "col-span-full" : "");
 
   // Validation: a chart section must never land in the full-width (last, odd-count)
   // slot — a stretched-wide chart looks wrong. Dropping SWAPS the dragged + target
@@ -378,7 +393,9 @@ export default function DashboardPage() {
     const dragging = drag && drag.zone === zone && drag.id === id;
     const target =
       overId === id && drag && drag.zone === zone && drag.id !== id;
-    return `dash-drag${dragging ? " is-dragging" : ""}${target ? " is-drop-target" : ""}`;
+    return `cursor-grab${dragging ? " cursor-grabbing opacity-40" : ""}${
+      target ? " outline outline-2 outline-offset-[3px] outline-dashed outline-indigo-500" : ""
+    }`;
   };
   const dragHandlers = (zone, id, order, setOrder) => ({
     draggable: true,
@@ -434,7 +451,7 @@ export default function DashboardPage() {
             {...dnd}
           >
             {salesTrend.hasData
-              ? trendTabs(salesCharts, <DragHandleIcon className="drag-handle" />)
+              ? trendTabs(salesCharts, <DragHandleIcon className="size-4 shrink-0 text-slate-500" />)
               : emptyNote("No sales activity in the selected range.")}
           </Card>
         );
@@ -446,7 +463,7 @@ export default function DashboardPage() {
             {...dnd}
           >
             {productionTrend.hasData
-              ? trendTabs(productionCharts, <DragHandleIcon className="drag-handle" />)
+              ? trendTabs(productionCharts, <DragHandleIcon className="size-4 shrink-0 text-slate-500" />)
               : emptyNote("No production activity in the selected range.")}
           </Card>
         );
@@ -454,8 +471,8 @@ export default function DashboardPage() {
         return (
           <Card key={id} title={dragTitle("Active work orders")} bodyFlush {...dnd}>
             {activeWOs.length ? (
-              <div className="table-wrap">
-                <table className="table table--fixed">
+              <div className="overflow-x-auto">
+                <table className={`${TABLE_CLS} table-fixed [&_td]:truncate [&_td]:tabular-nums`}>
                   <thead>
                     <tr>
                       <th>Work order no.</th>
@@ -469,8 +486,8 @@ export default function DashboardPage() {
                       const status = getWoStatusMeta(wo.status);
                       return (
                         <tr key={wo.woNo}>
-                          <td className="cell-mono">{wo.woNo}</td>
-                          <td className="cell-strong">{wo.product}</td>
+                          <td className="!font-mono !text-[13px] !text-indigo-700">{wo.woNo}</td>
+                          <td className="!font-semibold !text-slate-900">{wo.product}</td>
                           <td>{formatNumber(wo.qty)}</td>
                           <td>
                             <Badge tone={status.tone}>{status.label}</Badge>
@@ -489,25 +506,25 @@ export default function DashboardPage() {
       case "machine_status":
         return (
           <Card key={id} title={dragTitle("Machine status")} bodyFlush {...dnd}>
-            <div className="table-wrap">
-              <table className="table">
+            <div className="overflow-x-auto">
+              <table className={TABLE_CLS}>
                 <thead>
                   <tr>
                     <th>Machine</th>
                     <th>Status</th>
                     <th>Current job</th>
-                    <th className="num">Utilization</th>
+                    <th className="!text-right">Utilization</th>
                   </tr>
                 </thead>
                 <tbody>
                   {MACHINES.map((mc) => (
                     <tr key={mc.name}>
-                      <td className="cell-strong">{mc.name}</td>
+                      <td className="!font-semibold !text-slate-900">{mc.name}</td>
                       <td>
                         <Badge tone={mc.tone}>{mc.status}</Badge>
                       </td>
-                      <td className="cell-mono">{mc.job}</td>
-                      <td className="num">{mc.utilization}%</td>
+                      <td className="!font-mono !text-[13px] !text-indigo-700">{mc.job}</td>
+                      <td className="!text-right tabular-nums">{mc.utilization}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -529,25 +546,25 @@ export default function DashboardPage() {
             {...dnd}
           >
             {products.length ? (
-              <div className="table-wrap">
-                <table className="table">
+              <div className="overflow-x-auto">
+                <table className={TABLE_CLS}>
                   <thead>
                     <tr>
                       <th>Product</th>
                       <th>SKU</th>
-                      <th className="num">Units sold</th>
-                      <th className="num">Revenue</th>
-                      <th className="num">Share</th>
+                      <th className="!text-right">Units sold</th>
+                      <th className="!text-right">Revenue</th>
+                      <th className="!text-right">Share</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((p) => (
                       <tr key={p.sku === "—" ? p.name : p.sku}>
-                        <td className="cell-strong">{p.name}</td>
-                        <td className="cell-mono">{p.sku}</td>
-                        <td className="num">{formatNumber(p.units)}</td>
-                        <td className="num">{formatNumber(p.revenue)}</td>
-                        <td className="num">{p.share}%</td>
+                        <td className="!font-semibold !text-slate-900">{p.name}</td>
+                        <td className="!font-mono !text-[13px] !text-indigo-700">{p.sku}</td>
+                        <td className="!text-right tabular-nums">{formatNumber(p.units)}</td>
+                        <td className="!text-right tabular-nums">{formatNumber(p.revenue)}</td>
+                        <td className="!text-right tabular-nums">{p.share}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -584,10 +601,10 @@ export default function DashboardPage() {
       ) : error ? (
         <ErrorState text={error} onRetry={refreshAll} />
       ) : (
-        <div className="stack">
+        <div className="flex flex-col gap-4">
           {/* Key metrics — drag a card onto another to swap their positions */}
           {show("key_metrics") ? (
-            <div className="stat-grid dash-metrics">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-4">
               {kpiOrder.map((kid) => {
                 const k = KPI_BY_ID[kid];
                 if (!k) return null;
@@ -610,13 +627,15 @@ export default function DashboardPage() {
 
           {/* Sections — drag a card onto another to swap; last spans full width when odd */}
           {gridVisible ? (
-            <div className="dash-cols">{visibleGrid.map((id) => renderSection(id))}</div>
+            <div className="grid grid-cols-2 items-stretch gap-4 max-nav:grid-cols-1 [&_[data-slot=card-content]]:px-2 [&_[data-slot=card-header]]:px-2 [&_[data-slot=card-header]]:pb-2">
+              {visibleGrid.map((id) => renderSection(id))}
+            </div>
           ) : null}
 
           {!anyVisible ? (
-            <div className="state">
-              <div className="state__title">No widgets shown</div>
-              <div className="state__text">
+            <div className="px-6 py-[52px] text-center text-slate-500">
+              <div className="mb-1 text-base font-semibold text-slate-900">No widgets shown</div>
+              <div className="text-sm">
                 Use “Manage widgets” to add cards back to your dashboard.
               </div>
             </div>

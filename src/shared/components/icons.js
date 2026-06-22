@@ -33,6 +33,7 @@ export {
   Plus as AddIcon,
   X as RemoveIcon,
   PackageCheck as ReceiveIcon,
+  LogOut as LogoutIcon,
   Link2 as LinkIcon,
   Download as DownloadIcon,
   SlidersHorizontal as ManageWidgetsIcon,
@@ -42,6 +43,8 @@ export {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Phone as PhoneIcon,
+  Eye as ShowIcon,
+  EyeOff as HideIcon,
 
   // ---- Feedback / status ----
   CircleCheck as SuccessIcon,

@@ -3,6 +3,13 @@ import { createRoot } from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { PrimeReactProvider } from 'primereact/api'
 import { store } from './store/store'
+import { logout } from './modules/auth/authSlice'
+
+// When the axios layer detects an expired/invalid token (a 401 on an
+// authenticated request), it emits this event — drop the session so <RequireAuth>
+// redirects to /login. Lives here (outside React) since the interceptor can't use
+// router navigation directly.
+window.addEventListener('erp:auth-expired', () => store.dispatch(logout()))
 
 // PrimeReact styles first, so the hand-written design system in index.css keeps
 // the last word on any rare class overlap. PrimeReact namespaces under `.p-*`.

@@ -5,6 +5,7 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
+import Input from '../../../shared/components/Input';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/format';
 import {
@@ -29,9 +30,9 @@ import { confirm, confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
-    <div className="detail-item">
-      <div className="detail-item__label">{label}</div>
-      <div className="detail-item__value">{children}</div>
+    <div>
+      <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">{label}</div>
+      <div className="text-[15px] font-medium text-slate-900">{children}</div>
     </div>
   );
 }
@@ -138,12 +139,12 @@ export default function ProductionOrderDetailPage() {
         }
       />
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Work order details">
-          <div className="detail-grid">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-[18px]">
             <Detail label="Product">
               {order.productName}
-              {order.productCode ? <span className="muted"> · {order.productCode}</span> : null}
+              {order.productCode ? <span className="text-slate-500"> · {order.productCode}</span> : null}
             </Detail>
             <Detail label="To build">
               {formatNumber(order.quantity)} {order.unit}
@@ -171,40 +172,40 @@ export default function ProductionOrderDetailPage() {
           </div>
           {order.notes ? (
             <>
-              <div className="divider" style={{ margin: '18px 0' }} />
-              <div className="detail-item__label">Notes</div>
-              <p style={{ marginTop: 4 }}>{order.notes}</p>
+              <div className="my-[18px] h-px bg-slate-200" />
+              <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">Notes</div>
+              <p className="mt-1">{order.notes}</p>
             </>
           ) : null}
         </Card>
 
         <Card title="Materials consumed" bodyFlush>
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Material</th>
-                  <th className="num">Required (full run)</th>
-                  <th className="num">Consumed so far</th>
+                  <th className="!text-right">Required (full run)</th>
+                  <th className="!text-right">Consumed so far</th>
                   <th>Unit</th>
                 </tr>
               </thead>
               <tbody>
                 {order.materials.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="muted">
+                    <td colSpan={4} className="text-slate-500">
                       No materials listed for this work order.
                     </td>
                   </tr>
                 ) : (
                   order.materials.map((material) => (
                     <tr key={material.id}>
-                      <td className="cell-strong">
+                      <td className="!font-semibold !text-slate-900">
                         {material.materialName}
-                        {material.materialCode ? <span className="muted"> · {material.materialCode}</span> : null}
+                        {material.materialCode ? <span className="text-slate-500"> · {material.materialCode}</span> : null}
                       </td>
-                      <td className="num">{formatNumber(material.quantity)}</td>
-                      <td className="num">{formatNumber(material.consumedQty)}</td>
+                      <td className="!text-right tabular-nums">{formatNumber(material.quantity)}</td>
+                      <td className="!text-right tabular-nums">{formatNumber(material.consumedQty)}</td>
                       <td>{material.unit}</td>
                     </tr>
                   ))
@@ -214,30 +215,26 @@ export default function ProductionOrderDetailPage() {
           </div>
 
           {canProduce ? (
-            <div
-              className="row-between"
-              style={{ padding: '14px 20px', borderTop: '1px solid var(--border)', flexWrap: 'wrap', gap: 12 }}
-            >
-              <div className="row" style={{ gap: 10 }}>
-                <span className="text-sm muted">Report production of</span>
-                <input
-                  className="input"
-                  style={{ width: 120, textAlign: 'right' }}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3.5">
+              <div className="flex items-center gap-2.5">
+                <span className="text-[13px] text-slate-500">Report production of</span>
+                <Input
+                  className="w-[120px] text-right"
                   type="number"
                   min="0"
                   step="any"
                   value={qty}
                   onChange={(event) => setQty(event.target.value)}
                 />
-                <span className="text-sm muted">{order.unit}</span>
+                <span className="text-[13px] text-slate-500">{order.unit}</span>
               </div>
               <Button variant="primary" onClick={handleProduce} disabled={producing}>
                 {producing ? 'Producing…' : (<><ProductionIcon /> Report production</>)}
               </Button>
             </div>
           ) : (
-            <div className="row" style={{ padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
-              <span className="text-success">
+            <div className="flex items-center gap-2.5 border-t border-slate-200 px-5 py-3.5">
+              <span className="text-green-600">
                 {order.status === 'cancelled' ? 'Work order cancelled.' : (<><SuccessIcon size={16} /> Fully produced — finished goods are in inventory.</>)}
               </span>
             </div>

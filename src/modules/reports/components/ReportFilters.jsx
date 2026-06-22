@@ -5,6 +5,7 @@
  * off-by-one on the first-of-period boundaries.
  */
 import Button from '../../../shared/components/Button';
+import Input from '../../../shared/components/Input';
 
 const pad = (n) => String(n).padStart(2, '0');
 const isoLocal = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -37,30 +38,30 @@ function computePreset(key) {
 
 export default function ReportFilters({ range, onChange }) {
   return (
-    <div className="report-filters">
-      <div className="report-filters__dates">
-        <label className="report-filters__field">
+    <div className="flex flex-wrap items-end justify-between gap-3.5">
+      <div className="flex flex-wrap gap-3">
+        <label className="flex flex-col gap-[5px] text-xs font-semibold text-slate-500">
           <span>From</span>
-          <input
+          <Input
             type="date"
-            className="input"
+            className="w-[170px]"
             value={range.from}
             max={range.to || undefined}
             onChange={(event) => onChange({ ...range, from: event.target.value })}
           />
         </label>
-        <label className="report-filters__field">
+        <label className="flex flex-col gap-[5px] text-xs font-semibold text-slate-500">
           <span>To</span>
-          <input
+          <Input
             type="date"
-            className="input"
+            className="w-[170px]"
             value={range.to}
             min={range.from || undefined}
             onChange={(event) => onChange({ ...range, to: event.target.value })}
           />
         </label>
       </div>
-      <div className="report-filters__presets">
+      <div className="flex flex-wrap gap-2">
         {PRESETS.map((preset) => (
           <Button
             key={preset.key}

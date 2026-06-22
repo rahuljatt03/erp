@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AppLayout from './app/layout/AppLayout';
+import RequireAuth from './modules/auth/RequireAuth';
+import LoginPage from './modules/auth/pages/LoginPage';
 import DashboardPage from './modules/dashboard/DashboardPage';
 import InquiryListPage from './modules/inquiry/pages/InquiryListPage';
 import InquiryFormPage from './modules/inquiry/pages/InquiryFormPage';
@@ -29,8 +31,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AppLayout />}>
-          <Route index element={<DashboardPage />} />
+        {/* Public route — the only page reachable without a session. */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Everything else requires authentication. */}
+        <Route element={<RequireAuth />}>
+          <Route element={<AppLayout />}>
+            <Route index element={<DashboardPage />} />
           <Route path="reports" element={<ReportsPage />} />
 
           {/* Inquiry module */}
@@ -67,7 +74,8 @@ export default function App() {
           <Route path="production/:id" element={<ProductionOrderDetailPage />} />
           <Route path="production/:id/edit" element={<ProductionOrderFormPage />} />
 
-          <Route path="*" element={<NotFoundPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

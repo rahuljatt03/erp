@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import authReducer from '../modules/auth/authSlice';
 import inquiryReducer from '../modules/inquiry/inquirySlice';
 import inventoryReducer from '../modules/inventory/inventorySlice';
 import procurementReducer from '../modules/procurement/procurementSlice';
@@ -13,6 +14,7 @@ import salesReducer from '../modules/sales/salesSlice';
  */
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     inquiry: inquiryReducer,
     inventory: inventoryReducer,
     procurement: procurementReducer,

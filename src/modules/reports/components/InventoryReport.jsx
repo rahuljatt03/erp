@@ -40,8 +40,8 @@ function StockCard({ title, codeLabel, rows, filename }) {
     >
       <ReportTable
         columns={[
-          { key: 'code', label: codeLabel, render: (row) => <span className="cell-mono">{row.code}</span> },
-          { key: 'name', label: 'Name', render: (row) => <span className="cell-strong">{row.name}</span> },
+          { key: 'code', label: codeLabel, render: (row) => <span className="!font-mono !text-[13px] !text-indigo-700">{row.code}</span> },
+          { key: 'name', label: 'Name', render: (row) => <span className="!font-semibold !text-slate-900">{row.name}</span> },
           { key: 'unit', label: 'Unit' },
           { key: 'onHand', label: 'On hand', align: 'num', render: (row) => formatNumber(row.onHand) },
           { key: 'status', label: 'Status', render: (row) => <StockStatus status={row.status} /> },
@@ -61,7 +61,7 @@ export default function InventoryReport({ finishedGoods, rawMaterials }) {
   const s = report.summary;
 
   return (
-    <div className="stack">
+    <div className="flex flex-col gap-4">
       <ReportSummary
         items={[
           { label: 'Finished SKUs', value: formatNumber(s.fgSkus), meta: `${formatNumber(s.fgUnits)} units on hand` },
@@ -75,7 +75,7 @@ export default function InventoryReport({ finishedGoods, rawMaterials }) {
         ]}
       />
 
-      <p className="muted text-sm">
+      <p className="text-[13px] text-slate-500">
         Inventory is a live snapshot of current stock — the date range above doesn’t apply here.
       </p>
 

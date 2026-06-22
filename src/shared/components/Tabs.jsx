@@ -15,21 +15,38 @@ export default function Tabs({ tabs, initialKey, leading }) {
 
   return (
     <div>
-      <div className="tabs" role="tablist">
-        {leading != null ? <span className="tabs__lead">{leading}</span> : null}
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={tab.key === active}
-            className={`tab ${tab.key === active ? 'is-active' : ''}`}
-            onClick={() => setActive(tab.key)}
-          >
-            {tab.label}
-            {tab.badge != null ? <span className="tab__badge">{tab.badge}</span> : null}
-          </button>
-        ))}
+      <div className="mb-[18px] flex gap-0.5 border-b border-slate-200" role="tablist">
+        {leading != null ? (
+          <span className="inline-flex items-center pr-1.5">{leading}</span>
+        ) : null}
+        {tabs.map((tab) => {
+          const isActive = tab.key === active;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              className={`-mb-px inline-flex cursor-pointer items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-[color,border-color] ${
+                isActive
+                  ? 'border-indigo-600 text-indigo-700'
+                  : 'border-transparent text-slate-500 hover:text-slate-900'
+              }`}
+              onClick={() => setActive(tab.key)}
+            >
+              {tab.label}
+              {tab.badge != null ? (
+                <span
+                  className={`rounded-full px-2 py-px text-xs font-semibold tabular-nums ${
+                    isActive ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {tab.badge}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
       <div role="tabpanel">{current?.content}</div>
     </div>

@@ -5,6 +5,7 @@ import PageHeader from '../../../shared/components/PageHeader';
 import Button from '../../../shared/components/Button';
 import Card from '../../../shared/components/Card';
 import Badge from '../../../shared/components/Badge';
+import Input from '../../../shared/components/Input';
 import { LoadingState, ErrorState } from '../../../shared/components/states';
 import { formatDate, formatDateTime, formatNumber } from '../../../shared/utils/format';
 import {
@@ -29,9 +30,11 @@ import { confirm, confirmDelete } from '../../../shared/feedback/confirm';
 
 function Detail({ label, children }) {
   return (
-    <div className="detail-item">
-      <div className="detail-item__label">{label}</div>
-      <div className="detail-item__value">{children}</div>
+    <div>
+      <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">
+        {label}
+      </div>
+      <div className="text-[15px] font-medium text-slate-900">{children}</div>
     </div>
   );
 }
@@ -151,9 +154,9 @@ export default function PurchaseOrderDetailPage() {
         }
       />
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Order details">
-          <div className="detail-grid">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-[18px]">
             <Detail label="Supplier">{order.supplierName}</Detail>
             <Detail label="Contact">{order.supplierContact || '—'}</Detail>
             <Detail label="Order date">{formatDate(order.orderDate)}</Detail>
@@ -172,25 +175,25 @@ export default function PurchaseOrderDetailPage() {
           </div>
           {order.notes ? (
             <>
-              <div className="divider" style={{ margin: '18px 0' }} />
-              <div className="detail-item__label">Notes</div>
-              <p style={{ marginTop: 4 }}>{order.notes}</p>
+              <div className="my-[18px] h-px bg-slate-200" />
+              <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">Notes</div>
+              <p className="mt-1">{order.notes}</p>
             </>
           ) : null}
         </Card>
 
         <Card title="Lines & receiving" bodyFlush>
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Material</th>
-                  <th className="num">Ordered</th>
-                  <th className="num">Received</th>
-                  <th className="num">Outstanding</th>
-                  <th className="num">Unit price</th>
-                  <th className="num">Line total</th>
-                  {canReceive ? <th className="num">Receive now</th> : null}
+                  <th className="!text-right">Ordered</th>
+                  <th className="!text-right">Received</th>
+                  <th className="!text-right">Outstanding</th>
+                  <th className="!text-right">Unit price</th>
+                  <th className="!text-right">Line total</th>
+                  {canReceive ? <th className="!text-right">Receive now</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -198,26 +201,25 @@ export default function PurchaseOrderDetailPage() {
                   const outstanding = poItemOutstanding(item);
                   return (
                     <tr key={item.id}>
-                      <td className="cell-strong">
+                      <td className="!font-semibold !text-slate-900">
                         {item.materialName}
-                        {item.materialCode ? <span className="muted"> · {item.materialCode}</span> : null}
+                        {item.materialCode ? <span className="text-slate-500"> · {item.materialCode}</span> : null}
                       </td>
-                      <td className="num">
+                      <td className="!text-right tabular-nums">
                         {formatNumber(item.quantity)} {item.unit}
                       </td>
-                      <td className="num">{formatNumber(item.receivedQty)}</td>
-                      <td className="num fw-700" style={{ color: outstanding ? 'var(--warning)' : 'var(--success)' }}>
+                      <td className="!text-right tabular-nums">{formatNumber(item.receivedQty)}</td>
+                      <td className={`!text-right tabular-nums font-bold ${outstanding ? 'text-amber-600' : 'text-green-600'}`}>
                         {formatNumber(outstanding)}
                       </td>
-                      <td className="num">{formatNumber(item.unitPrice)}</td>
-                      <td className="num">
+                      <td className="!text-right tabular-nums">{formatNumber(item.unitPrice)}</td>
+                      <td className="!text-right tabular-nums">
                         {formatNumber((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}
                       </td>
                       {canReceive ? (
-                        <td className="num">
-                          <input
-                            className="input"
-                            style={{ width: 100, textAlign: 'right' }}
+                        <td className="!text-right tabular-nums">
+                          <Input
+                            className="w-[100px] text-right"
                             type="number"
                             min="0"
                             max={outstanding}
@@ -238,8 +240,8 @@ export default function PurchaseOrderDetailPage() {
           </div>
 
           {canReceive ? (
-            <div className="row-between" style={{ padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
-              <span className="muted text-sm">
+            <div className="flex items-center justify-between gap-2.5 border-t border-slate-200 px-5 py-3.5">
+              <span className="text-[13px] text-slate-500">
                 Confirming a receipt adds these quantities to raw-material inventory.
               </span>
               <Button variant="primary" onClick={handleReceive} disabled={receiving}>
@@ -247,8 +249,8 @@ export default function PurchaseOrderDetailPage() {
               </Button>
             </div>
           ) : (
-            <div className="row" style={{ padding: '14px 20px', borderTop: '1px solid var(--border)' }}>
-              <span className="text-success"><SuccessIcon size={16} /> Fully received — all quantities are in inventory.</span>
+            <div className="flex items-center gap-2.5 border-t border-slate-200 px-5 py-3.5">
+              <span className="text-green-600"><SuccessIcon size={16} /> Fully received — all quantities are in inventory.</span>
             </div>
           )}
         </Card>

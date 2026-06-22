@@ -94,16 +94,16 @@ export default function ProductionOrderListPage() {
             }
           />
         ) : (
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>WO No.</th>
                   <th>Product</th>
-                  <th className="num">To build</th>
-                  <th className="num">Produced</th>
+                  <th className="!text-right">To build</th>
+                  <th className="!text-right">Produced</th>
                   <th>Due date</th>
-                  <th style={{ paddingLeft: 40 }}>Status</th>
+                  <th className="!pl-10">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,22 +111,22 @@ export default function ProductionOrderListPage() {
                   return (
                     <tr
                       key={wo.id}
-                      className="is-clickable"
+                      className="cursor-pointer hover:bg-indigo-50"
                       onClick={() => navigate(`/production/${wo.id}`)}
                     >
-                      <td className="cell-mono">{wo.woNo}</td>
-                      <td className="cell-strong">
+                      <td className="!font-mono !text-[13px] !text-indigo-700">{wo.woNo}</td>
+                      <td className="!font-semibold !text-slate-900">
                         {wo.productName}
                         {wo.productCode ? (
-                          <span className="muted"> · {wo.productCode}</span>
+                          <span className="text-slate-500"> · {wo.productCode}</span>
                         ) : null}
                       </td>
-                      <td className="num">
+                      <td className="!text-right tabular-nums">
                         {formatNumber(wo.quantity)} {wo.unit}
                       </td>
-                      <td className="num">{formatNumber(wo.producedQty)}</td>
+                      <td className="!text-right tabular-nums">{formatNumber(wo.producedQty)}</td>
                       <td>{wo.dueDate ? formatDate(wo.dueDate) : "—"}</td>
-                      <td style={{ paddingLeft: 40 }} onClick={(e) => e.stopPropagation()}>
+                      <td className="!pl-10" onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
                           value={wo.status}
                           options={WO_STATUSES}

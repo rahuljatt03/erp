@@ -32,7 +32,7 @@ export default function ManageWidgets({ widgets, visible, onToggle, onReset }) {
   const shown = widgets.filter((widget) => visible[widget.id]).length;
 
   return (
-    <div className="widget-menu" ref={ref}>
+    <div className="relative" ref={ref}>
       <Button
         variant="secondary"
         size="sm"
@@ -44,23 +44,27 @@ export default function ManageWidgets({ widgets, visible, onToggle, onReset }) {
       </Button>
 
       {open ? (
-        <div className="widget-menu__panel" role="menu">
-          <div className="widget-menu__header">
+        <div
+          className="absolute right-0 top-[calc(100%+8px)] z-30 w-[264px] rounded-card border border-slate-200 bg-white p-1.5 shadow-pop"
+          role="menu"
+        >
+          <div className="flex items-center justify-between px-2.5 pb-1.5 pt-2 text-[11.5px] font-semibold uppercase tracking-[0.5px] text-slate-500">
             <span>Show widgets</span>
             <button
               type="button"
-              className="widget-menu__reset"
+              className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-indigo-600 hover:underline"
               onClick={onReset}
             >
               Reset
             </button>
           </div>
-          <ul className="widget-menu__list">
+          <ul className="m-0 list-none p-0">
             {widgets.map((widget) => (
               <li key={widget.id}>
-                <label className="widget-menu__item">
+                <label className="flex cursor-pointer items-center gap-2.5 rounded-field px-2.5 py-[9px] text-sm text-slate-700 hover:bg-slate-50">
                   <input
                     type="checkbox"
+                    className="size-4 cursor-pointer accent-indigo-600"
                     checked={!!visible[widget.id]}
                     onChange={() => onToggle(widget.id)}
                   />
@@ -69,7 +73,7 @@ export default function ManageWidgets({ widgets, visible, onToggle, onReset }) {
               </li>
             ))}
           </ul>
-          <div className="widget-menu__footer">
+          <div className="mt-1 border-t border-slate-200 px-2.5 pb-1.5 pt-2 text-xs text-slate-500">
             {shown} of {widgets.length} shown
           </div>
         </div>

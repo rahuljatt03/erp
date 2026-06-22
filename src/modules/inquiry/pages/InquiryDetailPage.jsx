@@ -28,9 +28,11 @@ import {
 
 function Detail({ label, children }) {
   return (
-    <div className="detail-item">
-      <div className="detail-item__label">{label}</div>
-      <div className="detail-item__value">{children}</div>
+    <div>
+      <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">
+        {label}
+      </div>
+      <div className="text-[15px] font-medium text-slate-900">{children}</div>
     </div>
   );
 }
@@ -162,9 +164,9 @@ export default function InquiryDetailPage() {
         }
       />
 
-      <div className="stack">
+      <div className="flex flex-col gap-4">
         <Card title="Customer & inquiry details">
-          <div className="detail-grid">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-[18px]">
             <Detail label="Customer">{inquiry.customerName}</Detail>
             <Detail label="Contact">{inquiry.customerContact || '—'}</Detail>
             <Detail label="Inquiry date">{formatDate(inquiry.inquiryDate)}</Detail>
@@ -172,16 +174,18 @@ export default function InquiryDetailPage() {
           </div>
           {inquiry.notes ? (
             <>
-              <div className="divider" style={{ margin: '18px 0' }} />
-              <div className="detail-item__label">Notes</div>
-              <p style={{ marginTop: 4 }}>{inquiry.notes}</p>
+              <div className="my-[18px] h-px bg-slate-200" />
+              <div className="mb-[3px] text-xs font-semibold uppercase tracking-[0.4px] text-slate-500">
+                Notes
+              </div>
+              <p className="mt-1">{inquiry.notes}</p>
             </>
           ) : null}
         </Card>
 
         <Card title={`Products & raw materials (${inquiry.items.length})`} bodyFlush>
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Product</th>
@@ -194,25 +198,26 @@ export default function InquiryDetailPage() {
               <tbody>
                 {inquiry.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="cell-strong">
+                    <td className="!font-semibold !text-slate-900">
                       {item.productName}
                       {item.remarks ? (
-                        <div className="muted text-sm" style={{ marginTop: 2 }}>
-                          {item.remarks}
-                        </div>
+                        <div className="mt-0.5 text-[13px] text-slate-500">{item.remarks}</div>
                       ) : null}
                     </td>
-                    <td className="cell-mono">{item.productCode || '—'}</td>
+                    <td className="!font-mono !text-[13px] !text-indigo-700">{item.productCode || '—'}</td>
                     <td>
                       {formatNumber(item.quantity)} {item.unit}
                     </td>
                     <td>{formatDate(item.targetDeliveryDate)}</td>
                     <td>
                       {item.rawMaterials.length === 0 ? (
-                        <span className="muted">None specified</span>
+                        <span className="text-slate-500">None specified</span>
                       ) : (
                         item.rawMaterials.map((material) => (
-                          <span className="material-chip" key={material.id}>
+                          <span
+                            className="mb-1.5 mr-1.5 inline-flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1 text-[13px] text-indigo-700"
+                            key={material.id}
+                          >
                             <strong>{material.materialName}</strong>
                             {formatNumber(material.quantity)} {material.unit}
                           </span>

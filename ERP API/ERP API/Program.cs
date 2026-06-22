@@ -1,8 +1,12 @@
+using System.Text;
 using System.Text.Json.Serialization;
+using ERP_API.Auth;
 using ERP_API.Data;
 using ERP_API.Interfaces;
 using ERP_API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +39,30 @@ builder.Services.AddScoped<IFinishedGoodsService, FinishedGoodsService>();
 builder.Services.AddScoped<IRawMaterialsService, RawMaterialsService>();
 builder.Services.AddScoped<IProductionService, ProductionService>();
 builder.Services.AddScoped<IProcurementService, ProcurementService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// JWT authentication. Settings live in the "Jwt" config section; the same
+// settings object is shared with AuthService (token issuance) via DI.
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
+    ?? throw new InvalidOperationException("Missing 'Jwt' configuration section.");
+builder.Services.AddSingleton(jwtSettings);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(1),
+        };
+    });
 
 // Allow the Vite/React frontend (dev server) to call the API.
 const string FrontendCors = "frontend";
@@ -61,6 +89,7 @@ if (app.Environment.IsDevelopment())
 // surfacing as a "blocked by CORS policy" error in the React app.
 app.UseCors(FrontendCors);
 app.UseHttpsRedirection();
+app.UseAuthentication();   // must run before UseAuthorization so the JWT is read first
 app.UseAuthorization();
 app.MapControllers();
 

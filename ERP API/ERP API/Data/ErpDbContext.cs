@@ -30,6 +30,8 @@ public class ErpDbContext : DbContext
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderItem> PurchaseOrderItems => Set<PurchaseOrderItem>();
 
+    public DbSet<User> Users => Set<User>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Inquiry>(e =>
@@ -124,6 +126,12 @@ public class ErpDbContext : DbContext
         modelBuilder.Entity<PurchaseOrderItem>(e =>
         {
             e.ToTable("purchase_order_items");
+        });
+
+        modelBuilder.Entity<User>(e =>
+        {
+            e.ToTable("users");
+            e.HasIndex(x => x.Email).IsUnique();
         });
     }
 }

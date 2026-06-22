@@ -144,29 +144,29 @@ export default function RequirementAnalysisPage() {
         }
       />
 
-      <div className="stack">
-        <div className="stat-grid">
-          <div className="stat">
-            <div className="stat__label">Product lines</div>
-            <div className="stat__value">{summary.productLines}</div>
-            <div className="stat__meta">{summary.linesToBuild} need building</div>
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-4">
+          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-card">
+            <div className="text-[13px] font-medium text-slate-500">Product lines</div>
+            <div className="mt-1.5 text-[28px] font-bold text-slate-900 tabular-nums">{summary.productLines}</div>
+            <div className="mt-1 text-xs text-slate-500">{summary.linesToBuild} need building</div>
           </div>
-          <div className="stat">
-            <div className="stat__label">Units to build</div>
-            <div className="stat__value">{formatNumber(summary.unitsToBuild)}</div>
-            <div className="stat__meta">After using finished stock</div>
+          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-card">
+            <div className="text-[13px] font-medium text-slate-500">Units to build</div>
+            <div className="mt-1.5 text-[28px] font-bold text-slate-900 tabular-nums">{formatNumber(summary.unitsToBuild)}</div>
+            <div className="mt-1 text-xs text-slate-500">After using finished stock</div>
           </div>
-          <div className="stat">
-            <div className="stat__label">Materials required</div>
-            <div className="stat__value">{summary.materials}</div>
-            <div className="stat__meta">Distinct raw materials</div>
+          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-card">
+            <div className="text-[13px] font-medium text-slate-500">Materials required</div>
+            <div className="mt-1.5 text-[28px] font-bold text-slate-900 tabular-nums">{summary.materials}</div>
+            <div className="mt-1 text-xs text-slate-500">Distinct raw materials</div>
           </div>
-          <div className="stat">
-            <div className="stat__label">Materials short</div>
-            <div className="stat__value" style={{ color: summary.materialsShort ? 'var(--danger)' : 'var(--success)' }}>
+          <div className="rounded-card border border-slate-200 bg-white p-5 shadow-card">
+            <div className="text-[13px] font-medium text-slate-500">Materials short</div>
+            <div className={`mt-1.5 text-[28px] font-bold tabular-nums ${summary.materialsShort ? 'text-red-600' : 'text-green-600'}`}>
               {summary.materialsShort}
             </div>
-            <div className="stat__meta">Need purchasing</div>
+            <div className="mt-1 text-xs text-slate-500">Need purchasing</div>
           </div>
         </div>
 
@@ -174,16 +174,16 @@ export default function RequirementAnalysisPage() {
         <Card
           title={<><FinishedGoodsIcon size={16} /> Finished goods — build plan</>}
           bodyFlush
-          actions={<span className="muted text-sm">Ordered − in stock = to build</span>}
+          actions={<span className="text-[13px] text-slate-500">Ordered − in stock = to build</span>}
         >
-          <div className="table-wrap">
-            <table className="table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
               <thead>
                 <tr>
                   <th>Product</th>
-                  <th className="num">Ordered</th>
-                  <th className="num">In stock</th>
-                  <th className="num">To build</th>
+                  <th className="!text-right">Ordered</th>
+                  <th className="!text-right">In stock</th>
+                  <th className="!text-right">To build</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -192,21 +192,21 @@ export default function RequirementAnalysisPage() {
                   const meta = FINISHED_STATUS[row.status] ?? FINISHED_STATUS.to_build;
                   return (
                     <tr key={row.key}>
-                      <td className="cell-strong">
+                      <td className="!font-semibold !text-slate-900">
                         {row.productName}
-                        {row.productCode ? <span className="muted"> · {row.productCode}</span> : null}
+                        {row.productCode ? <span className="text-slate-500"> · {row.productCode}</span> : null}
                         {!row.tracked ? (
-                          <div className="muted text-sm">Not in finished-goods inventory (treated as 0)</div>
+                          <div className="text-[13px] text-slate-500">Not in finished-goods inventory (treated as 0)</div>
                         ) : null}
                         {row.toBuild > 0 ? (
-                          <div className="muted text-sm">≈ materials estimated from inquiry</div>
+                          <div className="text-[13px] text-slate-500">≈ materials estimated from inquiry</div>
                         ) : null}
                       </td>
-                      <td className="num">
+                      <td className="!text-right tabular-nums">
                         {formatNumber(row.ordered)} {row.unit}
                       </td>
-                      <td className="num">{formatNumber(row.inStock)}</td>
-                      <td className="num fw-700" style={{ color: row.toBuild ? 'var(--brand-700)' : 'var(--text-muted)' }}>
+                      <td className="!text-right tabular-nums">{formatNumber(row.inStock)}</td>
+                      <td className={`!text-right tabular-nums font-bold ${row.toBuild ? '!text-indigo-700' : '!text-slate-500'}`}>
                         {formatNumber(row.toBuild)}
                       </td>
                       <td>
@@ -224,7 +224,7 @@ export default function RequirementAnalysisPage() {
         <Card
           title={<><ProcurementIcon size={16} /> Raw materials — procurement plan</>}
           bodyFlush
-          actions={<span className="muted text-sm">Required for build − in stock = to purchase</span>}
+          actions={<span className="text-[13px] text-slate-500">Required for build − in stock = to purchase</span>}
         >
           {rawMaterials.length === 0 ? (
             <EmptyState
@@ -233,14 +233,14 @@ export default function RequirementAnalysisPage() {
               text="Every product on this inquiry is already in finished-goods stock, so no raw materials are needed."
             />
           ) : (
-            <div className="table-wrap">
-              <table className="table">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm [&_td]:border-b [&_td]:border-slate-200 [&_td]:px-4 [&_td]:py-[13px] [&_td]:align-middle [&_td]:text-slate-700 [&_th]:whitespace-nowrap [&_th]:border-b [&_th]:border-slate-200 [&_th]:bg-slate-50 [&_th]:px-4 [&_th]:py-[11px] [&_th]:text-left [&_th]:text-[11.5px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.5px] [&_th]:text-slate-500 [&_tbody_tr:last-child_td]:border-b-0">
                 <thead>
                   <tr>
                     <th>Raw material</th>
-                    <th className="num">Required</th>
-                    <th className="num">In stock</th>
-                    <th className="num">To purchase</th>
+                    <th className="!text-right">Required</th>
+                    <th className="!text-right">In stock</th>
+                    <th className="!text-right">To purchase</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -249,20 +249,17 @@ export default function RequirementAnalysisPage() {
                     const meta = RAW_STATUS[row.status] ?? RAW_STATUS.shortage;
                     return (
                       <tr key={row.key}>
-                        <td className="cell-strong">
+                        <td className="!font-semibold !text-slate-900">
                           {row.materialName}
                           {!row.tracked ? (
-                            <div className="muted text-sm">Not in raw-material inventory (treated as 0)</div>
+                            <div className="text-[13px] text-slate-500">Not in raw-material inventory (treated as 0)</div>
                           ) : null}
                         </td>
-                        <td className="num">
+                        <td className="!text-right tabular-nums">
                           {formatNumber(row.required)} {row.unit}
                         </td>
-                        <td className="num">{formatNumber(row.inStock)}</td>
-                        <td
-                          className="num fw-700"
-                          style={{ color: row.toPurchase ? 'var(--danger)' : 'var(--success)' }}
-                        >
+                        <td className="!text-right tabular-nums">{formatNumber(row.inStock)}</td>
+                        <td className={`!text-right tabular-nums font-bold ${row.toPurchase ? '!text-red-600' : '!text-green-600'}`}>
                           {formatNumber(row.toPurchase)}
                         </td>
                         <td>
@@ -277,7 +274,7 @@ export default function RequirementAnalysisPage() {
           )}
         </Card>
 
-        <div className="row" style={{ justifyContent: 'flex-end', paddingBottom: 8 }}>
+        <div className="flex items-center justify-end gap-2.5 pb-2">
           <Button
             variant="primary"
             onClick={handleCreatePO}

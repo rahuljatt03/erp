@@ -32,7 +32,7 @@ export default function ProcurementReport({ purchaseOrders, range }) {
   };
 
   return (
-    <div className="stack">
+    <div className="flex flex-col gap-4">
       <ReportSummary
         items={[
           { label: 'Purchase orders', value: formatNumber(s.orderCount) },
@@ -51,7 +51,7 @@ export default function ProcurementReport({ purchaseOrders, range }) {
         ]}
       />
 
-      <div className="report-cols">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card title="Spend by status" bodyFlush>
           <ReportTable
             columns={[
@@ -67,7 +67,7 @@ export default function ProcurementReport({ purchaseOrders, range }) {
         <Card title="Top suppliers" bodyFlush>
           <ReportTable
             columns={[
-              { key: 'label', label: 'Supplier', render: (row) => <span className="cell-strong">{row.label}</span> },
+              { key: 'label', label: 'Supplier', render: (row) => <span className="!font-semibold !text-slate-900">{row.label}</span> },
               { key: 'count', label: 'POs', align: 'num', render: (row) => formatNumber(row.count) },
               { key: 'value', label: 'Value', align: 'num', render: (row) => formatNumber(row.value) },
             ]}
@@ -88,9 +88,9 @@ export default function ProcurementReport({ purchaseOrders, range }) {
       >
         <ReportTable
           columns={[
-            { key: 'poNo', label: 'PO No.', render: (row) => <span className="cell-mono">{row.poNo}</span> },
+            { key: 'poNo', label: 'PO No.', render: (row) => <span className="!font-mono !text-[13px] !text-indigo-700">{row.poNo}</span> },
             { key: 'date', label: 'Date', render: (row) => formatDate(row.date) },
-            { key: 'supplier', label: 'Supplier', render: (row) => <span className="cell-strong">{row.supplier}</span> },
+            { key: 'supplier', label: 'Supplier', render: (row) => <span className="!font-semibold !text-slate-900">{row.supplier}</span> },
             {
               key: 'status',
               label: 'Status',
