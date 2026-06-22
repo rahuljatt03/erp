@@ -20,11 +20,15 @@ import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons'
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
 import { scrollToFirstError } from '../../../shared/utils/scrollToError';
+import PhoneField from '../../../shared/components/PhoneField';
+import { phoneError } from '../../../shared/utils/phone';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
   if (!draft.supplierName.trim()) errors.fields.supplierName = 'Supplier is required';
   if (!draft.orderDate) errors.fields.orderDate = 'Order date is required';
+  const contactError = phoneError(draft.supplierContact);
+  if (contactError) errors.fields.supplierContact = contactError;
 
   const withName = draft.items.filter((item) => item.materialName.trim() !== '');
   if (withName.length === 0) errors.form = 'Add at least one material line.';
@@ -199,11 +203,15 @@ export default function PurchaseOrderFormPage() {
                 onChange={(event) => setField('supplierName', event.target.value)}
               />
             </Field>
-            <Field label="Supplier contact" hint="Email or phone (optional)">
-              <input
-                className="input"
+            <Field
+              label="Supplier contact"
+              hint="Phone number (optional)"
+              error={errors.fields.supplierContact}
+            >
+              <PhoneField
                 value={draft.supplierContact}
-                onChange={(event) => setField('supplierContact', event.target.value)}
+                onChange={(value) => setField('supplierContact', value)}
+                error={Boolean(errors.fields.supplierContact)}
               />
             </Field>
             <Field label="Order date" required error={errors.fields.orderDate}>

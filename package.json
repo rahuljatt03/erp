@@ -21,6 +21,7 @@
     "primereact": "^10.9.8",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-phone-number-input": "^3.4.17",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.17.0",
     "tailwind-merge": "^3.6.0",

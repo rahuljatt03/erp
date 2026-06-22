@@ -15,11 +15,15 @@ import { AddIcon, RemoveIcon, LinkIcon } from '../../../shared/components/icons'
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
 import { scrollToFirstError } from '../../../shared/utils/scrollToError';
+import PhoneField from '../../../shared/components/PhoneField';
+import { phoneError } from '../../../shared/utils/phone';
 
 function validate(draft) {
   const errors = { fields: {}, items: {}, form: null };
   if (!draft.customerName.trim()) errors.fields.customerName = 'Customer is required';
   if (!draft.orderDate) errors.fields.orderDate = 'Order date is required';
+  const contactError = phoneError(draft.customerContact);
+  if (contactError) errors.fields.customerContact = contactError;
   const named = draft.items.filter((item) => item.productName.trim() !== '');
   if (named.length === 0) errors.form = 'Add at least one product line.';
   draft.items.forEach((item) => {
@@ -183,11 +187,15 @@ export default function SalesOrderFormPage() {
                 onChange={(event) => setField('customerName', event.target.value)}
               />
             </Field>
-            <Field label="Customer contact" hint="Email or phone (optional)">
-              <input
-                className="input"
+            <Field
+              label="Customer contact"
+              hint="Phone number (optional)"
+              error={errors.fields.customerContact}
+            >
+              <PhoneField
                 value={draft.customerContact}
-                onChange={(event) => setField('customerContact', event.target.value)}
+                onChange={(value) => setField('customerContact', value)}
+                error={Boolean(errors.fields.customerContact)}
               />
             </Field>
             <Field label="Order date" required error={errors.fields.orderDate}>

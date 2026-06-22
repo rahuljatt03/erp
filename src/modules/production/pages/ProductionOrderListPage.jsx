@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PageHeader from "../../../shared/components/PageHeader";
 import Button from "../../../shared/components/Button";
@@ -103,7 +103,6 @@ export default function ProductionOrderListPage() {
                   <th className="num">To build</th>
                   <th className="num">Produced</th>
                   <th>Due date</th>
-                  <th>Source</th>
                   <th style={{ paddingLeft: 40 }}>Status</th>
                 </tr>
               </thead>
@@ -127,25 +126,6 @@ export default function ProductionOrderListPage() {
                       </td>
                       <td className="num">{formatNumber(wo.producedQty)}</td>
                       <td>{wo.dueDate ? formatDate(wo.dueDate) : "—"}</td>
-                      <td onClick={(e) => e.stopPropagation()}>
-                        {wo.sourceSalesOrderNo ? (
-                          <Link
-                            to={`/sales-orders/${wo.sourceSalesOrderId}`}
-                            className="cell-mono"
-                          >
-                            {wo.sourceSalesOrderNo}
-                          </Link>
-                        ) : wo.sourceInquiryNo ? (
-                          <Link
-                            to={`/inquiries/${wo.sourceInquiryId}/requirements`}
-                            className="cell-mono"
-                          >
-                            {wo.sourceInquiryNo}
-                          </Link>
-                        ) : (
-                          <span className="muted">Direct</span>
-                        )}
-                      </td>
                       <td style={{ paddingLeft: 40 }} onClick={(e) => e.stopPropagation()}>
                         <StatusSelect
                           value={wo.status}

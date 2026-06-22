@@ -18,6 +18,8 @@ import { AddIcon } from '../../../shared/components/icons';
 import { useToast } from '../../../shared/feedback/FeedbackProvider';
 import { confirm } from '../../../shared/feedback/confirm';
 import { scrollToFirstError } from '../../../shared/utils/scrollToError';
+import PhoneField from '../../../shared/components/PhoneField';
+import { phoneError } from '../../../shared/utils/phone';
 
 /** Validates a draft and returns `{ errors, hasErrors }`. */
 function validate(draft) {
@@ -25,6 +27,9 @@ function validate(draft) {
 
   if (!draft.customerName.trim()) errors.fields.customerName = 'Customer name is required';
   if (!draft.inquiryDate) errors.fields.inquiryDate = 'Inquiry date is required';
+
+  const contactError = phoneError(draft.customerContact);
+  if (contactError) errors.fields.customerContact = contactError;
   if (draft.items.length === 0) errors.form = 'Add at least one product line.';
 
   draft.items.forEach((item) => {
@@ -181,12 +186,15 @@ export default function InquiryFormPage() {
               />
             </Field>
 
-            <Field label="Customer contact" hint="Email or phone (optional)">
-              <input
-                className="input"
-                placeholder="e.g. procurement@apex.com"
+            <Field
+              label="Customer contact"
+              hint="Phone number (optional)"
+              error={errors.fields.customerContact}
+            >
+              <PhoneField
                 value={draft.customerContact}
-                onChange={(event) => setField('customerContact', event.target.value)}
+                onChange={(value) => setField('customerContact', value)}
+                error={Boolean(errors.fields.customerContact)}
               />
             </Field>
 

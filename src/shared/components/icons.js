@@ -41,6 +41,7 @@ export {
   ChevronDown as ChevronDownIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
+  Phone as PhoneIcon,
 
   // ---- Feedback / status ----
   CircleCheck as SuccessIcon,

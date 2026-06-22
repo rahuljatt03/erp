@@ -114,7 +114,6 @@ export default function SalesOrderListPage() {
                   <th>SO No.</th>
                   <th>Customer</th>
                   <th>Order date</th>
-                  <th>Source</th>
                   <th className="num">Value</th>
                   <th>Status</th>
                 </tr>
@@ -130,15 +129,6 @@ export default function SalesOrderListPage() {
                       <td className="cell-mono">{so.soNo}</td>
                       <td className="cell-strong">{so.customerName}</td>
                       <td>{formatDate(so.orderDate)}</td>
-                      <td>
-                        {so.sourceInquiryNo ? (
-                          <span className="cell-mono">
-                            {so.sourceInquiryNo}
-                          </span>
-                        ) : (
-                          <span className="muted">Direct</span>
-                        )}
-                      </td>
                       <td className="num">{formatNumber(soValue(so))}</td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <StatusSelect

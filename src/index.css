@@ -921,6 +921,154 @@ svg.lucide {
   pointer-events: none;
 }
 
+/* ---------- Phone input (react-phone-number-input) ---------------------- */
+/* The library renders <div.PhoneInput> = [custom country picker] + the number
+   <input.PhoneInputInput>. We turn the container into a single .input-style box
+   and make the inner number input borderless so it reads as one control. */
+.phone-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.phone-input:focus-within {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+.phone-input.has-error {
+  border-color: var(--danger);
+}
+.phone-input.PhoneInput--disabled {
+  background: var(--slate-50);
+  cursor: not-allowed;
+}
+.phone-input .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-strong);
+}
+.phone-input .PhoneInputInput::placeholder {
+  color: var(--slate-400);
+}
+.phone-input .PhoneInputCountryIcon {
+  flex-shrink: 0;
+}
+
+/* Country picker: flag trigger + searchable popup menu. */
+.phone-country {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.phone-country__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 5px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.phone-country__trigger:hover:not(:disabled) {
+  background: var(--slate-100);
+}
+.phone-country__trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.phone-country__chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.phone-country__menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 50;
+  width: 264px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.phone-country__search {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.phone-country__search input {
+  width: 100%;
+  padding: 6px 9px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.phone-country__search input:focus {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px var(--brand-100);
+}
+.phone-country__list {
+  max-height: 244px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.phone-country__option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.phone-country__option:hover {
+  background: var(--brand-50);
+}
+.phone-country__option.is-selected {
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-weight: 600;
+}
+.phone-country__option .PhoneInputCountryIcon {
+  flex-shrink: 0;
+}
+.phone-country__option-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phone-country__empty {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
 /* ---------- Layout helpers ---------------------------------------------- */
 
 .form-grid {
